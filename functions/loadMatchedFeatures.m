@@ -25,17 +25,17 @@ end
 
 %%
 tmp=cell(1,numTiles);
-parfor idx = 1:numTiles
+for idx = 1:numTiles
     matchfile = fullfile(descriptorfolder,scopeloc.relativepaths{idx},sprintf('match-%s.mat',directions));
     if exist(matchfile,'file')
         % load descriptors
-        tmp{idx} = load(matchfile)
+        tmp{idx} = load(matchfile);
     end
     if checkversion
         matchfile2 = fullfile(descriptorfolder,scopeloc.relativepaths{idx},sprintf('match-%s-%d.mat',directions,checkversion));
         if exist(matchfile2,'file')
             % load descriptors
-            tmp2 = load(matchfile2)
+            tmp2 = load(matchfile2);
             if size(tmp{idx}.paireddescriptor.X,1)<size(tmp2.paireddescriptor.X,1)
                 % overwrite
                 tmp{idx} = tmp2;

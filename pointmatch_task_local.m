@@ -46,7 +46,7 @@ else
     % initalize missing tiles based on knn
     numthr = 50;
     [pixinit,nummatches] = initTiles(featmap,directions,scopeloc,numthr);
-    sum(nummatches)
+    % sum(nummatches)
 end
 badtiles = nummatches<numthr & ~isnan(neighbors(:,directionMap(directions)));
 
@@ -56,22 +56,26 @@ badtiles = nummatches<numthr & ~isnan(neighbors(:,directionMap(directions)));
 % (filename,from,to,numcores,exitcode)
 outlistfile = fullfile(pwd,'shfiles',sprintf('outlistfile_%s_%s.txt',brain,date));
 if ~runlocal;fid = fopen(outlistfile,'w');end
-for ii = 1:length(badtiles)
+parfor_progress(length(badtiles))
+parfor ii = 1:length(badtiles)
     if ~badtiles(ii)
         continue
     end
+    %%
     tile1 = fullfile(descriptorfolder,scopeloc.relativepaths{ii});
     acqusitionfolder1 = fileparts(scopeloc.filepath{ii});
     iineig = neighbors(ii,directionMap(directions));
     tile2 = fullfile(descriptorfolder,scopeloc.relativepaths{iineig});
     acqusitionfolder2 = fileparts(scopeloc.filepath{iineig});
-    outfold =tile1;
+    outfold =fullfile(matchfolder,scopeloc.relativepaths{ii});
     if runlocal
-        pointmatch(tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),ch,maxnumofdesc,0);
+        pointmatch(tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),'1',maxnumofdesc,0);
     else
         fprintf(fid,'%s %s %s %s %s %f %f %f %s %f\n',tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),ch,maxnumofdesc);
     end
+%     parfor_progress;
 end
+parfor_progress(0);
 if ~runlocal;fclose(fid);end
 %%
 
