@@ -103,11 +103,12 @@ if 1 % iterate on missing tiles
 
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
-    runlocal=1;
     directions = 'Z';
-    ch='1';
-
-    pointmatch_task_local(inputfolder,experimentfolder,matchfolder,matfolder,directions,ch,runlocal)
+    ch='0';
+    [~,sample] = fileparts(experimentfolder);
+    runlocal=1;
+    
+    pointmatch_task_local(sample,inputfolder,descriptorfolder,matchfolder,matfolder,directions,ch,runlocal)
     rmpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'))
 end
 
