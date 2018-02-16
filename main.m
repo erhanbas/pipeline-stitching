@@ -18,32 +18,50 @@ function [outputArgs] = main()
 
 % $Author: base $	$Date: 2016/09/21 11:52:40 $	$Revision: 0.1 $
 % Copyright: HHMI 2016
-
-addpath(genpath('./common'))
-addpath(genpath('./functions'))
-brain = '2017-11-17';
-tag='';
-
 %% %%%%%%%%%%%%
 directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
 directions = 'Z';
+%% %%%%%%%%%%%%
+addpath(genpath('./common'))
+addpath(genpath('./functions'))
+brain = '2018-01-30';
+tag='';
 
+% classifierinput = inputfolder;
 %% PATCH, fix this after dm11/tier2 merge
 % raw input to descriptor generotion
 inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
-experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s',brain);
-% experimentfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/cluster/Stitching/%s%s/',brain,tag)
+piperun = 1;
+if piperun
+    pipelineoutputfolder = '/nrs/mouselight/cluster/sandbox2/2018-01-30'
+    classifierinput = inputfolder;
+    classifieroutput = fullfile(pipelineoutputfolder,'prob')
+    descinput = classifieroutput;
+    descoutput = fullfile(pipelineoutputfolder,'desc')
+    matchinput = descoutput;
+    matchoutput = fullfile(pipelineoutputfolder,'match')
+end
 
-descriptorfolder = fullfile(experimentfolder,'classifier_output');
+experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s',brain);
 matfolder = fullfile(experimentfolder,'matfiles/');
+mkdir(matfolder)
+unix(sprintf('umask g+rxw %s',matfolder));
+unix(sprintf('chmod g+rxw %s',matfolder));
 scopefile = fullfile(matfolder,'scopeloc.mat');
-desc_ch = {'1'};
+
+if piperun
+    descriptorfolder = descoutput;
+    matchfolder = matchoutput;
+else
+    descriptorfolder = fullfile(experimentfolder,'classifier_output');
+    matchfolder = descriptorfolder;
+end
+
+desc_ch = {'0'};
 descriptorfile = fullfile(matfolder,sprintf('descriptors_ch%s.mat',desc_ch{:})); % accumulated descriptor file
 matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % accumulated descriptor file
 
-mkdir(matfolder)
-unix(sprintf('umask g+rxw %s',matfolder))
-unix(sprintf('chmod g+rxw %s',matfolder))
+
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
 if 0
@@ -52,28 +70,44 @@ if 0
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
     save(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
 end
+%%
+if 0
+    curationH5(classifierinput,classifieroutput)
+end
 
+if 0
+    % obsolute after pipeline, TODO: fix missing condition for tile runs
+    % rather then channel logs
+    % checkmissingProb(classifierinput,classifieroutput) 
+    %%
+    checkmissingDesc(descinput,descoutput)
+    %%
+    checkmissingMatch(matchinput,matchoutput)
+end
 %% 1: LOAD MATCHED FEATS
 if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
     % load finished tile matches. find badly matched or missing tile pairs
-    [regpts,featmap] = loadMatchedFeatures(scopeloc,descriptorfolder,directions,checkversion);
+    [regpts,featmap] = loadMatchedFeatures(scopeloc,matchfolder,directions,checkversion);
 
     save(fullfile(matfolder,'regpts.mat'),'regpts','featmap')
-    if ~exist(fullfile(matfolder,'regpts_1stiter.mat'),'file')
-        % faster to make a copy 
+    if ~exist(fullfile(matfolder,'regpts_1stiter.mat'),'file') % faster to make a copy 
         unix(sprintf('cp %s %s',fullfile(matfolder,'regpts.mat'),fullfile(matfolder,'regpts_1stiter.mat')))
-        % save(fullfile(matfolder,'regpts_1stiter.mat'),'regpts','featmap')
     end
 end
 
 %%
 if 1 % iterate on missing tiles
+
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
-    runlocal = 1;
-    pointmatch_task(brain,runlocal)
+    %pointmatch_task(brain,runlocal)
+    runlocal=1;
+    directions = 'Z';
+    ch='1';
+
+    pointmatch_task_local(inputfolder,experimentfolder,matchfolder,matfolder,directions,ch,runlocal)
     rmpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'))
 end
 

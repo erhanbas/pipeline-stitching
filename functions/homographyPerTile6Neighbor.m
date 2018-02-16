@@ -42,7 +42,7 @@ foundmatch = all(isfinite(xyz_umperpix_model(1:2,:)));
 xyz_umperpix_model(1:2,foundmatch);
 %% OUTLIER DETECTION
 validtiles=squeeze(all(curvemodel(1:2,1,:)|curvemodel(1:2,3,:)));
-[thrs,medcurvemodel] = estimateFCthreshols(curvemodel(:,:,validtiles),1);
+[thrs,medcurvemodel] = estimateFCthreshols(curvemodel(:,:,validtiles),.99);
 medcurvemodelcents = medcurvemodel(1:2,[1 3]);
 thrcurvemodelcents = thrs(1:2,[1 3]);
 count = zeros(Nneig,2);

@@ -22,9 +22,10 @@ if nargin<4
     videofile='./videos/2017-09-25-heatmap-XYZ'
 end
 % populate afftile
-numTiles = size(regpts,2)
+numTiles = size(regpts,2);
 afftile = zeros(3, 4, numTiles);
-afftransform = scopeparams.affineglFC;
+medaffine = zeros(3,3,numTiles);for ii=1:numTiles;if isempty(scopeparams(ii).affineglFC);continue;end;medaffine(:,:,ii) = scopeparams(ii).affineglFC;end
+afftransform = median(medaffine,3);
 mflip = -eye(3);%mflip(3,3)=1;
 afftransform = afftransform*mflip;
 for idxt = 1:numTiles
@@ -60,7 +61,7 @@ for t = latticeZRange(1:end-1)'
     
     for id_ix = find(ix)
         %%
-        if isempty(regpts{id_ix}.X)
+        if isempty(regpts{id_ix}.X) | isnan(regpts{id_ix}.neigs(end))
             vec{t} = [];
             continue
         end
@@ -248,7 +249,7 @@ for t = latticeZRange(1:end-1)'
     F(iter) = getframe(gcf);
     iter=iter+1;
 end
-%%
+
 v = VideoWriter(videofile,'Motion JPEG AVI');
 % v.CompressionRatio = 3;
 v.Quality = 100;

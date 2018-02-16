@@ -18,14 +18,17 @@ function [scope] = getScopeCoordinates(inputfolder,newdash)
 
 args.level = 3;
 args.ext = 'acquisition';
+args.skip = {''}
+args.keep = {''}
+args.pattern = '\d'
 opt.seqtemp = fullfile(inputfolder,'scopeacquisitionlist.txt');
 opt.inputfolder = inputfolder;
-if exist(opt.seqtemp, 'file') == 2
-    % load file directly
-else
-    args.fid = fopen(opt.seqtemp,'w');
-    recdir(opt.inputfolder,args)
-end
+% if exist(opt.seqtemp, 'file') == 2
+%     % load file directly
+% else
+args.fid = fopen(opt.seqtemp,'w');
+recdir(opt.inputfolder,args)
+% end
 
 fid=fopen(opt.seqtemp,'r');
 inputfiles = textscan(fid,'%s');
