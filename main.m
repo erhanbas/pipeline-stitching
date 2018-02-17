@@ -24,16 +24,17 @@ directions = 'Z';
 %% %%%%%%%%%%%%
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-brain = '2018-01-30';
+brain = '2018-02-06';
 tag='';
 
 % classifierinput = inputfolder;
 %% PATCH, fix this after dm11/tier2 merge
 % raw input to descriptor generotion
 inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
+inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
 piperun = 1;
 if piperun
-    pipelineoutputfolder = '/nrs/mouselight/cluster/sandbox2/2018-01-30'
+    pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
     classifierinput = inputfolder;
     classifieroutput = fullfile(pipelineoutputfolder,'prob')
     descinput = classifieroutput;
@@ -70,7 +71,7 @@ if 0
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
     save(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
 end
-%%
+%
 if 0
     curationH5(classifierinput,classifieroutput)
 end
@@ -84,7 +85,7 @@ if 0
     %%
     checkmissingMatch(matchinput,matchoutput)
 end
-%% 1: LOAD MATCHED FEATS
+% 1: LOAD MATCHED FEATS
 if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
@@ -98,22 +99,21 @@ if 0
     end
 end
 
-%%
+%
 if 1 % iterate on missing tiles
 
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
     directions = 'Z';
-    ch='0';
+    ch=desc_ch{1};
     [~,sample] = fileparts(experimentfolder);
     runlocal=1;
-    
     pointmatch_task_local(sample,inputfolder,descriptorfolder,matchfolder,matfolder,directions,ch,runlocal)
     rmpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'))
 end
 
-%% 2 scope params estimation
-%%
+% 2 scope params estimation
+%
 if 1
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -142,7 +142,7 @@ if 1
         'curvemodel_','params')
 end
 
-%%
+%
 if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
@@ -153,7 +153,7 @@ if 1
     descriptorMatchQualityHeatMap(regpts,scopeparams,scopeloc,videofile)
 end
 
-%%
+%
 if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')

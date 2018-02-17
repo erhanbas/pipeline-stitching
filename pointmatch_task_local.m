@@ -69,11 +69,15 @@ parfor ii = 1:length(badtiles)
     acqusitionfolder2 = fileparts(scopeloc.filepath{iineig});
     outfold =fullfile(matchfolder,scopeloc.relativepaths{ii});
     if runlocal
-        pointmatch(tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),'1',maxnumofdesc,0);
+        try
+            pointmatch(tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),ch,maxnumofdesc,0);
+        catch
+            sprintf('%d',ii)
+        end
     else
         fprintf(fid,'%s %s %s %s %s %f %f %f %s %f\n',tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),ch,maxnumofdesc);
     end
-%     parfor_progress;
+    parfor_progress;
 end
 parfor_progress(0);
 if ~runlocal;fclose(fid);end
