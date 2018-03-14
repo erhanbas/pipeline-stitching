@@ -18,27 +18,29 @@ function [outputArgs] = main()
 
 % $Author: base $	$Date: 2016/09/21 11:52:40 $	$Revision: 0.1 $
 % Copyright: HHMI 2016
-%% %%%%%%%%%%%%
+%% MAKE SURE PATHS etc are correct
 directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
 directions = 'Z';
-%% %%%%%%%%%%%%
+
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-brain = '2018-02-06';
+brain = '2017-09-25';
 tag='';
 
 % classifierinput = inputfolder;
-%% PATCH, fix this after dm11/tier2 merge
 % raw input to descriptor generotion
 inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
 inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
 piperun = 1;
+
 if piperun
     pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+    pipelineoutputfolder = '/nrs/mouselight/cluster/sandbox2/2017-12-19-vs3'
     classifierinput = inputfolder;
     classifieroutput = fullfile(pipelineoutputfolder,'prob')
     descinput = classifieroutput;
     descoutput = fullfile(pipelineoutputfolder,'desc')
+    descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
     matchinput = descoutput;
     matchoutput = fullfile(pipelineoutputfolder,'match')
 end
@@ -58,7 +60,7 @@ else
     matchfolder = descriptorfolder;
 end
 
-desc_ch = {'0'};
+desc_ch = {'1'};
 descriptorfile = fullfile(matfolder,sprintf('descriptors_ch%s.mat',desc_ch{:})); % accumulated descriptor file
 matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % accumulated descriptor file
 
@@ -71,20 +73,19 @@ if 0
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
     save(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
 end
-%
+%% BULLSHIT CURATION STUFF
+% obsolute after pipeline, TODO: fix missing condition for tile runs
+% rather then channel logs
 if 0
     curationH5(classifierinput,classifieroutput)
 end
-
 if 0
-    % obsolute after pipeline, TODO: fix missing condition for tile runs
-    % rather then channel logs
-    % checkmissingProb(classifierinput,classifieroutput) 
-    %%
+    % checkmissingProb(classifierinput,classifieroutput)
     checkmissingDesc(descinput,descoutput)
-    %%
     checkmissingMatch(matchinput,matchoutput)
 end
+
+%%
 % 1: LOAD MATCHED FEATS
 if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
@@ -92,16 +93,15 @@ if 0
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
     % load finished tile matches. find badly matched or missing tile pairs
     [regpts,featmap] = loadMatchedFeatures(scopeloc,matchfolder,directions,checkversion);
-
+    
     save(fullfile(matfolder,'regpts.mat'),'regpts','featmap')
-    if ~exist(fullfile(matfolder,'regpts_1stiter.mat'),'file') % faster to make a copy 
+    if ~exist(fullfile(matfolder,'regpts_1stiter.mat'),'file') % faster to make a copy
         unix(sprintf('cp %s %s',fullfile(matfolder,'regpts.mat'),fullfile(matfolder,'regpts_1stiter.mat')))
     end
 end
 
-%
-if 1 % iterate on missing tiles
-
+if 0 % iterate on missing tiles (ANOTHER BULLSHIT)
+    
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
     directions = 'Z';
@@ -112,48 +112,46 @@ if 1 % iterate on missing tiles
     rmpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'))
 end
 
-% 2 scope params estimation
-%
+%%
+% 2 scope params estimation.
+% i) finds matches on x&y
+% ii) finds field curvature based on matched points
+% iii) creates a 3D affine model by jointly solving a linear system of
+% equations
+
 if 1
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
-    scopeacqparams = util.readScopeFile(fileparts(scopeloc.filepath{1}));
-    params.scopeacqparams = scopeacqparams;
-    params.viz = 0;
-    params.debug = 0;
-    params.Ndivs = 4;
-    params.Nlayer = 4;
-    params.htop = 5;
-    params.expensionratio = 1;
-    params.imagesize = [1024 1536 251];
-    params.imsize_um = [scopeacqparams.x_size_um scopeacqparams.y_size_um scopeacqparams.z_size_um];
-    params.overlap_um = [scopeacqparams.x_overlap_um scopeacqparams.y_overlap_um scopeacqparams.z_overlap_um];
-    params.order = 1;
-    params.applyFC = 1;
-    params.beadparams = [];%beadparams;
-
-    descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
-    [paireddescriptor, scopeparams, R, curvemodel,scopeparams_, paireddescriptor_,curvemodel_] = ...
-        estimateFCpertile(descriptors,neighbors,scopeloc,params); %#ok<ASGLU>
-    %%
-    save(descriptorfile,'descriptors','-v7.3')
-    save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-        'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
-        'curvemodel_','params')
+    if 1
+        [descriptors,paireddescriptor_,curvemodel_,scopeparams_,paireddescriptor,curvemodel,scopeparams] = ...
+            tileProcessor(scopeloc,descriptorfolder,desc_ch);
+        save(descriptorfile,'descriptors','-v7.3')
+        save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+            'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
+            'curvemodel_','params','-v7.3')
+    else
+        descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
+        [paireddescriptor, scopeparams, R, curvemodel,scopeparams_, paireddescriptor_,curvemodel_] = ...
+            estimateFCpertile(descriptors,neighbors,scopeloc,params); %#ok<ASGLU>
+        save(descriptorfile,'descriptors','-v7.3')
+        save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+            'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
+            'curvemodel_','params')
+    end
 end
 
-%
-if 1
+%%
+if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
-    videofile = sprintf('./videos/%s-1stiter-ch1',brain)
+    videofile = sprintf('./videos/%s-1stiter-ch1-%s',brain,date)
     % descriptorMatchQuality(regpts,scopeparams,scopeloc,videofile)
-%     createThumb(regpts,scopeparams,scopeloc,videofile)
+    %     createThumb(regpts,scopeparams,scopeloc,videofile)
     descriptorMatchQualityHeatMap(regpts,scopeparams,scopeloc,videofile)
 end
 
-%
+%%
 if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
@@ -161,7 +159,7 @@ if 1
         'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
         'curvemodel_','params')
     
-    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams_,curvemodel_,[]);
+    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams_,curvemodel_,778:782);
     if 1
         save(fullfile(matfolder,sprintf('%s_%s',datestr(now,'mmddyyHHMMSS'),'vecfield3D')),'vecfield3D','params')
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
@@ -177,7 +175,7 @@ vecfield = vecfield3D;
 % [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
 params.big = 1;
 params.ymldims = [params.imagesize 2];%[1024 1536 251 2]
-sub = 0;
+sub = 1;
 params.root = vecfield.root;
 
 if sub
@@ -211,7 +209,7 @@ if 0
         scopeparams = scope2_beadparams.scope2_beadparams;
     end
     vecfield = vectorField_flatrun(params,scopeloc,scopeparams,2);
-
+    
     load ./matfiles/xypaireddescriptor paireddescriptor R curvemodel
     [scopeparams,scopeparams_,paireddescriptor_,curvemodel_] = homographyPerTile6Neighbor(...
         beadparams,neighbors,scopeloc,paireddescriptor,R,curvemodel,imsize_um);

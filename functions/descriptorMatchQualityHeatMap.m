@@ -111,7 +111,8 @@ hold on
 loops = latticeZRange(end)-latticeZRange(1);
 F(loops) = struct('cdata',[],'colormap',[]);
 iter=1;
-for t = latticeZRange(1:end-1)'
+
+for t = 780%latticeZRange(1:end-1)'%[779,780]%
     %%
     % idxtest = sliceinds(375)
     ix = (scopeloc.gridix(:,3)'==t);
@@ -125,10 +126,11 @@ for t = latticeZRange(1:end-1)'
     end
     
     %%
+%     myfig=t
     figure(myfig), cla, clf
-    if isempty( XYZ_t{t})
-        continue
-    end
+%     if isempty( XYZ_t{t})
+%         continue
+%     end
     
     X = XYZ_t{t}(:,1);
     Y = XYZ_t{t}(:,2);
@@ -137,7 +139,6 @@ for t = latticeZRange(1:end-1)'
     V = XYZ_tp1{t}(:,2)-XYZ_t{t}(:,2);
     W = XYZ_tp1{t}(:,3)-XYZ_t{t}(:,3);
     
-    %%
     MXYZ = sqrt(U.^2+V.^2+W.^2)/1e3;
     MXY = sqrt(U.^2+V.^2)/1e3;
     FxXY = scatteredInterpolant(XYZ_tp1{t},MXY,'linear','nearest');
@@ -159,7 +160,13 @@ for t = latticeZRange(1:end-1)'
     
     disp(['    Layer ' num2str(t) ' of ' num2str(max(scopeloc.gridix(:,3)))]);
     caxis([min(ranXYZ(ranXYZ>0)) max(ranXYZ)*.9])
-    for ii=1:sum(ix)
+
+    clear theseinds
+    %theseinds=1:sum(ix);
+    theseinds(1)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==33&scopeloc.gridix(:,3)==t));
+    theseinds(2)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==34&scopeloc.gridix(:,3)==t));
+    
+    for ii=[theseinds]%1:sum(ix)
         rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
         xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
         yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
@@ -249,7 +256,7 @@ for t = latticeZRange(1:end-1)'
     F(iter) = getframe(gcf);
     iter=iter+1;
 end
-
+%%
 v = VideoWriter(videofile,'Motion JPEG AVI');
 % v.CompressionRatio = 3;
 v.Quality = 100;

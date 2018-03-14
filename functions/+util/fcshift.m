@@ -1,4 +1,11 @@
 function [locs,xshift2D,yshift2D] = fcshift(model,order,xy,dims,locs)
+
+if isempty(xy)
+    xlocs = 1:dims(1);
+    ylocs = 1:dims(2);
+    [xy2,xy1] = ndgrid(ylocs(:),xlocs(:));
+    xy = [xy1(:),xy2(:)];
+end
 cent = squeeze(mean(model(1:2,1),3));
 scale = (squeeze(mean(model(1:2,2),3)));
 shift = squeeze(mean(model(1:2,3),3));

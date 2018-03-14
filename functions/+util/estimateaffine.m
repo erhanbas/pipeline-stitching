@@ -16,7 +16,7 @@ function [scopeparams,validthis] = estimateaffine(paireddescriptor,neighbors,sco
 % $Author: base $	$Date: 2017/04/26 14:29:14 $	$Revision: 0.1 $
 % Copyright: HHMI 2017
 %%
-if nargin<7
+if nargin<6
     old = 1;
 end
 beadreg = 0;

@@ -77,69 +77,61 @@ paireddesctemp{2}.X = [];
 paireddesctemp{2}.Y = [];
 %
 Ntiles = size(neigs,1);
+%%
+try parfor_progress(0);catch;end
 parfor_progress(Ntiles)
-parfor ineig = 1:Ntiles%Ntiles%find(neigs(:,1)==5463)%1:size(neigs,1)
+
+parfor ineig = 1:Ntiles%5163%[5162 5163 5164]%Ntiles%find(neigs(:,1)==5463)%1:size(neigs,1)%5162
     %% load descriptor pairs X (center) - Y (adjacent tile)
     idxcent = neigs(ineig,1);
     descent = descriptors{idxcent};
-    if isempty(descent)
-        continue
-    else
-        descent = double(descent(:,1:3));
-    end
-    if size(descent,1)<3
-        continue
-    end
-    
-    descent(:,1) = dims(1)+1 - descent(:,1);
-    descent(:,2) = dims(2)+1 - descent(:,2);
+    if isempty(descent);continue;end
+    descent = double(descent(:,1:3));
+    if size(descent,1)<3;continue;end
+
+    descent = util.correctTiles(descent,dims); % flip dimensions
     mout = zeros(3,3);
     paireddescriptor_ = paireddesctemp;
     R_ = zeros(3);
     %%
     for iadj = 1:size(neigs,2)-2 %1:x-overlap, 2:y-overlap, 3:z-overlap
         %%
+        % idaj : 1=right(+x), 2=bottom(+y), 3=below(+z)
         idxadj =  neigs(ineig,iadj+1);
-        if isnan(idxadj)
-            continue
-        end
-        %%
+        
+        if isnan(idxadj);continue;end
         descadj = descriptors{idxadj};
-        if isempty(descadj)
-            continue
-        else
-            descadj = double(descadj(:,1:3));
-        end
-        if size(descadj,1)<3
-            continue
-        end
-        % flip dimensions
-        descadj(:,1) = dims(1)+1 - descadj(:,1);
-        descadj(:,2) = dims(2)+1 - descadj(:,2);
+        if isempty(descadj);continue;end
+
+        descadj = double(descadj(:,1:3)); % descadj has x-y-z-w1-w2 format
+        if size(descadj,1)<3;continue;end
+        
+        descadj = util.correctTiles(descadj,dims); % flip dimensions
         stgshift = 1000*(scopeloc.loc(idxadj,:)-scopeloc.loc(idxcent,:));
         pixshift = round(stgshift.*(dims-1)./(imsize_um));
-        % idaj : 1=right(+x), 2=bottom(+y), 3=below(+z)
-        %pixshift(iadj) = pixshift(iadj)+expensionshift(iadj); % initialize with a relative shift to improve CDP
-        descadj = descadj + ones(size(descadj,1),1)*pixshift;
+        descadj = descadj + ones(size(descadj,1),1)*pixshift; % shift with initial guess based on stage coordinate
+
         %%
         nbound = [0 0];
         nbound(1) = max(pixshift(iadj),min(descadj(:,iadj)));
         nbound(2) = min(dims(iadj),max(descent(:,iadj)))+0;
         X = descent(descent(:,iadj)>nbound(1)&descent(:,iadj)<nbound(2),:);
         Y = descadj(descadj(:,iadj)>nbound(1)&descadj(:,iadj)<nbound(2),:);
-        if size(X,1)<3 | size(Y,1)<3
-            continue
-        end
-        %%
-        %figure
-        [X_,Y_,out] = descriptorMatch(X,Y,pixshift,iadj,matchparams);
+        if size(X,1)<3 | size(Y,1)<3;continue;end
+        
+        % get descpair
+        [X_,Y_] = match.descriptorMatch(X,Y,matchparams);
+        if size(X_,1)<3 | size(Y_,1)<3;continue;end
+        Y_(:,iadj) = Y_(:,iadj)- pixshift(iadj);% move it back to original location after CDP
+
+        % get field curvature model
+        [X_,Y_,out] = match.fcestimate(X_,Y_,iadj,matchparams);
+        % flip back dimensions
+        X_ = util.correctTiles(X_,dims);
+        Y_ = util.correctTiles(Y_,dims);
+        
         % store pairs
         mout(iadj,:) = out;
-        % flip back dimensions
-        X_(:,1) = dims(1)+1 - X_(:,1);
-        X_(:,2) = dims(2)+1 - X_(:,2);
-        Y_(:,1) = dims(1)+1 - Y_(:,1);
-        Y_(:,2) = dims(2)+1 - Y_(:,2);
         paireddescriptor_{iadj}.X = X_;
         paireddescriptor_{iadj}.Y = Y_;
         %R(:,iadj,ineig) = round(median(X_-Y_));

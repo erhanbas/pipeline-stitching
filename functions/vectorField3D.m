@@ -50,7 +50,7 @@ for ii=1:size(afftransform,3)
     afftransform(:,:,ii) = afftransform(:,:,ii)*mflip;
 end
 
-%%
+%% for efficiency reasons precompute this
 xlocs = 1:dims(1);
 ylocs = 1:dims(2);
 [xy2,xy1] = ndgrid(ylocs(:),xlocs(:));
@@ -136,12 +136,13 @@ if 1
     if nargin<6 | isempty(theselayers)
         theselayers=latticeZRange(1:end-1)';
     end
-    stopindex = 121;
+    stopindex = 5163;
     nooptim = NaN(1,numTiles);
     for t = theselayers
         %%
         disp(['    Layer ' num2str(t) ' of ' num2str(max(scopeloc.gridix(:,3)))]);
         ix = (scopeloc.gridix(:,3)'==t);
+        idxinlayer = find(ix);
         if (sum(ix)<1)
             disp(['No tiles found in layer #' num2str(t) '!!']);
             continue;
@@ -176,6 +177,9 @@ if 1
                         'Color','m','HorizontalAlignment','center','FontSize',8)
                 end
                 
+                for ii=find(idxinlayer==5163)
+                    rectangle('Position', [x(ii)-w(ii) y(ii)-h(ii) w(ii) h(ii)],'EdgeColor','w','LineWidth',2,'FaceColor',[0 .5 .5])
+                end
                 %surfc(X,Y,density/max(density(:)),'LineStyle','none'),
                 set(gca,'Ydir','reverse')
                 %         legend('P_t','P_{t+1}','E_t','E_{t+1}')
@@ -197,8 +201,8 @@ if 1
                 ax.YLabel.FontSize = 16;
                 ax.XLabel.String = 'mm';
                 ax.XLabel.FontSize = 16;
-                xlim([Rmin(1) Rmax(1)])
-                ylim([Rmin(2) Rmax(2)])
+                xlim([Rmin(1) Rmax(1)]-params.imsize_um(1)*1e3)
+                ylim([Rmin(2) Rmax(2)]-params.imsize_um(2)*1e3)
                 % title([num2str(t),' - '])
                 drawnow
                 %%
@@ -217,7 +221,6 @@ if 1
             disp(['    Layer ' num2str(t) ' of ' num2str(max(scopeloc.gridix(:,3))) ' totDesc: ' num2str(size(Fxt.Points,1))]);
         end
         %%
-        idxinlayer = find(ix);
         if any(idxinlayer==stopindex)
             stop=1;
         end

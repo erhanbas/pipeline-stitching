@@ -2,10 +2,10 @@ function targetidx = getTargetIDx(scopeloc,neighbors)
 if 1
     %%
     if 1
-        st=[192,124,1049];
+        st=[219,34,780]-1;%[192,124,1049];
         ed=st+2;
-        st = scopeloc.gridix(1971,1:3)-1;
-        ed=st+2;
+%         st = scopeloc.gridix(1971,1:3)-1;
+%         ed=st+2;
     elseif 0
         for ii=1:1e6, if length(strfind(scopeloc.filepath{ii},'/2017-04-26/01/01120')),break,end,end,ii
         st=scopeloc.gridix(ii,1:3)-1;
@@ -19,7 +19,7 @@ if 1
     targetidx = find(scopeloc.gridix(:,1)>=st(1)&scopeloc.gridix(:,1)<=ed(1)&...
         scopeloc.gridix(:,2)>=st(2)&scopeloc.gridix(:,2)<=ed(2)&...
         scopeloc.gridix(:,3)>=st(3)&scopeloc.gridix(:,3)<=ed(3))
-    targetidx = [1971,neighbors(1971,5)]
+%     targetidx = [1971,neighbors(1971,5)]
     %         targetidx=[6962 6991]
 elseif 0
     inds_ = 568;%inds(1)';

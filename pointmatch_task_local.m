@@ -59,8 +59,10 @@ if ~runlocal;fid = fopen(outlistfile,'w');end
 parfor_progress(length(badtiles))
 parfor ii = 1:length(badtiles)
     if ~badtiles(ii)
+        parfor_progress;
         continue
     end
+    
     %%
     tile1 = fullfile(descriptorfolder,scopeloc.relativepaths{ii});
     acqusitionfolder1 = fileparts(scopeloc.filepath{ii});
@@ -68,7 +70,12 @@ parfor ii = 1:length(badtiles)
     tile2 = fullfile(descriptorfolder,scopeloc.relativepaths{iineig});
     acqusitionfolder2 = fileparts(scopeloc.filepath{iineig});
     outfold =fullfile(matchfolder,scopeloc.relativepaths{ii});
+    if exist(fullfile(outfold,sprintf('match-%s-1.mat','Z')),'file')
+        parfor_progress;
+        continue
+    end
     if runlocal
+        ii
         try
             pointmatch(tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),ch,maxnumofdesc,0);
         catch
