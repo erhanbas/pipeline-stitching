@@ -60,9 +60,10 @@ validthis = zeros(1,Ntiles);
 
 %%
 latticeZRange = unique(scopeloc.gridix(:,3));
-theselayers=latticeZRange(1:end-1)';
+theselayers=latticeZRange(1:end)';
+Aest_big = cell(1,max(theselayers));
 
-for t = theselayers
+parfor t = theselayers
     %%
     disp(['    Layer ' num2str(t) ' of ' num2str(max(scopeloc.gridix(:,3)))]);
     ix = (scopeloc.gridix(:,3)'==t);
@@ -76,15 +77,24 @@ for t = theselayers
     [X,sdisp] = util.createDataMatrix(params,curvemodel,paireddescriptor,scopeloc,idxinlayer);
     %%
     % AX~b: A = b\X
-    Aest = sdisp/X;
+    Aest = sdisp/X; 
     Aest(3,3:3:end) = 1; %BULLSHIT: since we dont have bead experiment, we assume no z-skewedness
     Aest = reshape(Aest,3,3,[]);
-    for ii=1:size(Aest,3)
-        scopeparams(idxinlayer(ii)).affineglFC = 1000*Aest(:,:,ii); % BULLSHIT: convert to nm
-    end
+    Aest_big{t} = Aest;
     
 end
 
+%%
+for  t = theselayers
+    Aests = Aest_big{t};
+    ix = (scopeloc.gridix(:,3)'==t);
+    idxinlayer = find(ix);
+    for ii=1:size(Aests,3)
+        scopeparams(idxinlayer(ii)).affineglFC = 1000*Aests(:,:,ii); 
+    end
+    
+end
+%%
 
 %
 % %%

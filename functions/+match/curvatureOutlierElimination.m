@@ -1,4 +1,4 @@
-function [paireddescriptor,curvemodel] = curvatureOutlierElimination(paireddescriptor,curvemodel,scopeloc)
+function [paireddescriptor,curvemodel,unreliable] = curvatureOutlierElimination(paireddescriptor,curvemodel,scopeloc)
 %% outlier rejection based on median model
 Nneig = size(curvemodel,3);
 validtiles=squeeze(all(curvemodel(1:2,1,:)|curvemodel(1:2,3,:)));

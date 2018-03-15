@@ -1,9 +1,10 @@
-function [ scopeparams_ ] = affineOutlierElimination( scopeparams )
+function [ scopeparams_ ,paireddescriptor,curvemodel] = affineOutlierElimination( scopeloc,scopeparams,paireddescriptor,curvemodel,unreliable )
 %AFFINEOUTLIERELIMINATION Summary of this function goes here
 %   Detailed explanation goes here
 
 %% mean transformation
 afsum = zeros(3);
+Nneig = length(scopeparams);
 iter=0;
 for ineig = 1:Nneig
     af = scopeparams(ineig).affineglFC;
@@ -25,7 +26,7 @@ for ineig = 1:Nneig
         reliable(ineig) = 1;
     end
 end
-
+%%
 inliers = find(~unreliable&reliable(:));
 % for every tiles estimate an affine
 anchors = scopeloc.gridix(inliers,1:3);

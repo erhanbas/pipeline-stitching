@@ -1,4 +1,4 @@
-function [descriptors,paireddescriptor_,curvemodel_,scopeparams_,paireddescriptor,curvemodel,scopeparams] = tileProcessor(scopeloc,descriptorfolder,desc_ch)
+function [descriptors,paireddescriptor,curvemodel,scopeparams] = tileProcessor(scopeloc,descriptorfolder,desc_ch)
 
 % paramater setting for descrtiptor match
 scopeacqparams = util.readScopeFile(fileparts(scopeloc.filepath{1}));
@@ -19,20 +19,31 @@ params.beadparams = [];%PLACEHOLDER FOR BEADS, very unlikely to have it...
 
 checkthese = [1 4 5 7]; % 0 - right - bottom - below
 [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
+% accumulator for steps
+[paireddescriptor,R,curvemodel,scopeparams]=deal([]);
 
-%% 
+%% get tile descriptors
 descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
 
+%% descriptor match
+[paireddescriptor{end+1},R{end+1},curvemodel{end+1}] = match.xymatch(descriptors,neighbors(:,checkthese),scopeloc,params);
 %%
-[paireddescriptor,R,curvemodel] = match.xymatch(descriptors,neighbors(:,checkthese),scopeloc,params);
-
-%%
-[paireddescriptor_,curvemodel_] = match.curvatureOutlierElimination(paireddescriptor,curvemodel,scopeloc);
+[paireddescriptor{end+1},curvemodel{end+1},unreliable] = match.curvatureOutlierElimination(paireddescriptor{end},curvemodel{end},scopeloc);
 %%
 % joint affine estimation
-[scopeparams] = match.estimatejointaffine(paireddescriptor_,neighbors,scopeloc,params,curvemodel_,0);
+[scopeparams{end+1}] = match.estimatejointaffine(paireddescriptor{end},neighbors,scopeloc,params,curvemodel{end},0);
 %%
-scopeparams_ = match.affineOutlierElimination( scopeparams );
+[scopeparams{end+1}, paireddescriptor{end+1}, curvemodel{end+1}] = match.affineOutlierElimination( scopeloc, scopeparams{end}, paireddescriptor{end},curvemodel{end},unreliable );
+%%
+% %%
+%         matfolder='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/matfiles/'
+%         load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+%             'scopeparams', 'R', 'curvemodel', 'paireddescriptor_', ...
+%             'curvemodel_','params')
+%         %%
+%         save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+%             'scopeparams', 'R', 'curvemodel', 'paireddescriptor_', ...
+%             'curvemodel_','params','-v7.3')
 
 
 
