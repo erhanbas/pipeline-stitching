@@ -13,32 +13,34 @@ else
 end
 
 %% descriptor match
-[paireddescriptor{end+1},R{end+1},curvemodel{end+1}] = match.xymatch(descriptors,neighbors(:,checkthese),scopeloc,params);
+% [paireddescriptor{end+1},R{end+1},curvemodel{end+1}] = match.xymatch(descriptors,neighbors(:,checkthese),scopeloc,params);
+[paireddescriptor{1},R{1},curvemodel{1}] = match.xymatch(descriptors,neighbors(:,checkthese),scopeloc,params);
 
 %%
-[paireddescriptor{end+1},curvemodel{end+1},unreliable] = match.curvatureOutlierElimination(paireddescriptor{end},curvemodel{end},scopeloc);
-
+% [paireddescriptor{end+1},curvemodel{end+1},unreliable] = match.curvatureOutlierElimination(paireddescriptor{end},curvemodel{end},scopeloc);
+[paireddescriptor{2},curvemodel{2},unreliable] = match.curvatureOutlierElimination(paireddescriptor{1},curvemodel{1},scopeloc);
 %%
 % tile base affine
 if params.singleTile
-    [scopeparams{1},scopeparams{2},paireddescriptor{end+1},curvemodel{end+1}] = homographyPerTile6Neighbor(...
-        params,neighbors,scopeloc,paireddescriptor{end},R,curvemodel{end});
+%     [scopeparams{1},scopeparams{2},paireddescriptor{end+1},curvemodel{end+1}] = homographyPerTile6Neighbor(...
+%         params,neighbors,scopeloc,paireddescriptor{end},R,curvemodel{end});
+    % debug
+    [scopeparams{1},scopeparams{2},paireddescriptor{3},curvemodel{3}] = homographyPerTile6Neighbor(...
+        params,neighbors,scopeloc,paireddescriptor{2},R,curvemodel{2});
+    
 else
     % joint affine estimation
     [scopeparams{end+1}] = match.estimatejointaffine(paireddescriptor{end},neighbors,scopeloc,params,curvemodel{end},0);
     [scopeparams{end+1}, paireddescriptor{end+1}, curvemodel{end+1}] = match.affineOutlierElimination( scopeloc, scopeparams{end}, paireddescriptor{end},curvemodel{end},unreliable );
 end
 
-%%
 % %%
 %         matfolder='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/matfiles/'
 %         load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-%             'scopeparams', 'R', 'curvemodel', 'paireddescriptor_', ...
-%             'curvemodel_','params')
+%             'scopeparams', 'curvemodel','params')
 %         %%
 %         save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-%             'scopeparams', 'R', 'curvemodel', 'paireddescriptor_', ...
-%             'curvemodel_','params','-v7.3')
-
+%             'scopeparams', 'curvemodel','params','-v7.3')
+% 
 
 

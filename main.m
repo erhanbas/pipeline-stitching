@@ -122,7 +122,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if 1
+if 0
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -167,7 +167,7 @@ if 1
 end
 
 %%
-if 1
+if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
@@ -184,7 +184,7 @@ if 1
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
         'scopeparams', 'curvemodel','params')
     
-    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams{end},curvemodel{end},[]);
+    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams{end},curvemodel{end},[779:781]);
     if 1
         save(fullfile(matfolder,sprintf('%s_%s',datestr(now,'mmddyyHHMMSS'),'vecfield3D')),'vecfield3D','params')
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')

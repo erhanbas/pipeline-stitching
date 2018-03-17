@@ -87,7 +87,8 @@ end
 params.order = 1;
 [scopeparams,validthis] = util.estimateaffine(paireddescriptor,neighbors,scopeloc,params,curvemodel,0);
 
-%% mean transformation
+%% affine outlier: TODO, reject based on tile corner pixel shift magnitudes!!
+%mean transformation
 afsum = zeros(3);
 iter=0;
 for ineig = 1:Nneig
@@ -111,7 +112,7 @@ for ineig = 1:Nneig
     end
 end
 
-inliers = find(~unreliable&reliable(:));
+inliers = find(reliable(:));
 % for every tiles estimate an affine
 anchors = scopeloc.gridix(inliers,1:3);
 queries = scopeloc.gridix(:,1:3);
