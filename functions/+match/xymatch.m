@@ -61,8 +61,10 @@ R = zeros(3,3,size(neigs,1));
 paireddescriptor = cell(size(neigs,1),1);
 % initialize
 for ix = 1:size(neigs,1)
+    paireddescriptor{ix}.onx.valid = 0;
     paireddescriptor{ix}.onx.X = [];
     paireddescriptor{ix}.onx.Y = [];
+    paireddescriptor{ix}.ony.valid = 0;
     paireddescriptor{ix}.ony.X = [];
     paireddescriptor{ix}.ony.Y = []; 
     paireddescriptor{ix}.neigs = neigs(ix,:);
@@ -71,8 +73,10 @@ end
 
 %
 paireddesctemp=[];
+paireddesctemp{1}.valid = 0;
 paireddesctemp{1}.X = [];
 paireddesctemp{1}.Y = [];
+paireddesctemp{2}.valid = 0;
 paireddesctemp{2}.X = [];
 paireddesctemp{2}.Y = [];
 %
@@ -125,13 +129,14 @@ parfor ineig = 1:Ntiles%5163%[5162 5163 5164]%Ntiles%find(neigs(:,1)==5463)%1:si
         Y_(:,iadj) = Y_(:,iadj)- pixshift(iadj);% move it back to original location after CDP
 
         % get field curvature model
-        [X_,Y_,out] = match.fcestimate(X_,Y_,iadj,matchparams);
+        [X_,Y_,out,valid] = match.fcestimate(X_,Y_,iadj,matchparams);
         % flip back dimensions
         X_ = util.correctTiles(X_,dims);
         Y_ = util.correctTiles(Y_,dims);
         
         % store pairs
         mout(iadj,:) = out;
+        paireddescriptor_{iadj}.valid = valid;
         paireddescriptor_{iadj}.X = X_;
         paireddescriptor_{iadj}.Y = Y_;
         %R(:,iadj,ineig) = round(median(X_-Y_));
@@ -140,8 +145,11 @@ parfor ineig = 1:Ntiles%5163%[5162 5163 5164]%Ntiles%find(neigs(:,1)==5463)%1:si
     R(:,:,ineig) = R_;
     curvemodel(:,:,ineig) = mout;
 
+    paireddescriptor{ineig}.onx.valid = paireddescriptor_{1}.valid;
     paireddescriptor{ineig}.onx.X = paireddescriptor_{1}.X;
     paireddescriptor{ineig}.onx.Y = paireddescriptor_{1}.Y;
+    
+    paireddescriptor{ineig}.ony.valid = paireddescriptor_{2}.valid;
     paireddescriptor{ineig}.ony.X = paireddescriptor_{2}.X;
     paireddescriptor{ineig}.ony.Y = paireddescriptor_{2}.Y;
     paireddescriptor{ineig}.count = [size(paireddescriptor_{1}.X,1) size(paireddescriptor_{2}.X,1)];

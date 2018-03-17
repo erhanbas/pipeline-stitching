@@ -15,3 +15,4 @@ keeptheseX = bb1(keeptheseY)';
 disttrim = aa1(keeptheseY)'<projectionThr;
 X_ = X(keeptheseX(disttrim),:);
 Y_ = Y(keeptheseY(disttrim),:);
+

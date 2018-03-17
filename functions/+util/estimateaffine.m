@@ -68,6 +68,8 @@ else
 end
 validthis = zeros(1,Ntiles);
 %%
+try; parfor_progress(0);catch;end
+parfor_progress(Ntiles)
 parfor ineig = 1:Ntiles
     %%
     scopeparams(ineig).imsize_um = imsize_um;
@@ -112,13 +114,14 @@ parfor ineig = 1:Ntiles
                         stgdisp(:,end+1) = 1000*(scopeloc.loc(ileft,:)-scopeloc.loc(neigs(ineig,1),:));
                         sdisp = [sdisp,1000*stgdisp(:,end)*ones(1,siz(end))];
                     end
-                else find(paireddescriptor{theseinds(ii)}.neigs==ineig)==3 % above
+                elseif find(paireddescriptor{theseinds(ii)}.neigs==ineig)==3 % above
                     iabove = neigs4(ineig,3);
                     siz(end+1) = size(paireddescriptor{iabove}.ony.X,1);
                     allX = [allX;paireddescriptor{iabove}.ony.Y]; % flip X<->Y
                     allY = [allY;paireddescriptor{iabove}.ony.X];
                     stgdisp(:,end+1) = 1000*(scopeloc.loc(iabove,:)-scopeloc.loc(neigs(ineig,1),:));
                     sdisp = [sdisp,1000*stgdisp(:,end)*ones(1,siz(end))];
+                else
                 end
             end
         end

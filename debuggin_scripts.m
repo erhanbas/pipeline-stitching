@@ -22,8 +22,8 @@ ineig = 5163
 % icent = 5461
 % ineig = 5488
 
-Acent = -scopeparams_(icent).affineglFC/1e3;
-Aneig = -scopeparams_(ineig).affineglFC/1e3;
+Acent = -scopeparams{1}(icent).affineglFC/1e3;
+Aneig = -scopeparams{1}(ineig).affineglFC/1e3;
 Xcent = paireddescriptor_{icent}.ony.X;
 Ycent = paireddescriptor_{icent}.ony.Y;
 

@@ -24,7 +24,7 @@ directions = 'Z';
 
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-brain = '2018-03-09';
+brain = '2017-09-25';
 tag='';
 
 % classifierinput = inputfolder;
@@ -35,9 +35,9 @@ piperun = 1;
 
 if piperun
     if brain=='2017-09-25'
-        pipelineoutputfolder = '/nrs/mouselight/cluster/sandbox2/2017-12-19-vs3';
         classifierinput = inputfolder;
         descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
+        matchoutput = descoutput;
     else
         pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
         classifieroutput = fullfile(pipelineoutputfolder,'prob')
@@ -145,11 +145,16 @@ if 1
     params.singleTile = 1;
 
     if 1
-        [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
-            tileProcessor(scopeloc,descriptorfolder,desc_ch,params);
-        save(descriptorfile,'descriptors','-v7.3')
-        save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-            'scopeparams', 'curvemodel','params','-v7.3')
+        if 1
+            [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
+                tileProcessor_debug(scopeloc,descriptorfolder,desc_ch,params);
+        else
+            [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
+                tileProcessor(scopeloc,descriptorfolder,desc_ch,params);
+            save(descriptorfile,'descriptors','-v7.3')
+            save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+                'scopeparams', 'curvemodel','params','-v7.3')
+        end
     else
         descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
         [paireddescriptor, scopeparams, R, curvemodel,scopeparams_, paireddescriptor_,curvemodel_] = ...
