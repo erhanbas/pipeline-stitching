@@ -20,8 +20,8 @@ function [paireddescriptor, scopeparams, R, curvemodel,scopeparams_, paireddescr
 checkthese = [1 4 5 7]; % 0 - right - bottom - below
 imsize_um = params.imsize_um;
 mkdir('./matfiles')
-if 0
-    [paireddescriptor,R,curvemodel] = xymatch(...
+if 1
+    [paireddescriptor,R,curvemodel] = xymatch_old(...
         descriptors,neighbors(:,checkthese),scopeloc,params);
     save ./matfiles/xypaireddescriptor paireddescriptor R curvemodel
 else

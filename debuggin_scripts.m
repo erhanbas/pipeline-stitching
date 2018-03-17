@@ -1,3 +1,110 @@
+load(fullfile(matfolder,'scopeparams_pertile_singletile'),'paireddescriptor', ...
+    'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
+    'curvemodel_','params')
+%%
+[X_,Y_] = match.descriptorMatch(X,Y,matchparams);
+Y_(:,iadj) = Y_(:,iadj)- pixshift(iadj);% move it back to original location after CDP
+% get field curvature model
+[X_,Y_,out] = match.fcestimate(X_,Y_,iadj,matchparams);
+
+
+
+%%
+figure
+myplot3(X_,'.')
+hold on
+myplot3(Y_,'.')
+
+%%
+icent = 5136
+ineig = 5163
+
+% icent = 5461
+% ineig = 5488
+
+Acent = -scopeparams_(icent).affineglFC/1e3;
+Aneig = -scopeparams_(ineig).affineglFC/1e3;
+Xcent = paireddescriptor_{icent}.ony.X;
+Ycent = paireddescriptor_{icent}.ony.Y;
+
+order = params.order;
+dims = params.imagesize;
+xlocs = 1:dims(1);
+ylocs = 1:dims(2);
+[xy2,xy1] = ndgrid(ylocs(:),xlocs(:));
+xy = [xy1(:),xy2(:)];
+
+[Xcent_fc] = util.fcshift(curvemodel(:,:,icent),order,xy,dims,Xcent+1);
+Xcent_fc = Xcent_fc-1;
+
+[Ycent_fc] = util.fcshift(curvemodel(:,:,icent),order,xy,dims,Ycent+1);
+Ycent_fc = Ycent_fc-1;
+
+shift = median(Xcent-Ycent);
+shift_fc = median(Xcent_fc-Ycent_fc);
+locX = [[Acent 1e3*scopeloc.loc(icent,:)']*[Xcent ones(size(Xcent,1),1)]']';
+locY = [[Aneig 1e3*scopeloc.loc(ineig,:)']*[Ycent ones(size(Xcent,1),1)]']';
+locX_fc = [[Acent 1e3*scopeloc.loc(icent,:)']*[Xcent_fc ones(size(Xcent,1),1)]']';
+locY_fc = [[Aneig 1e3*scopeloc.loc(ineig,:)']*[Ycent_fc ones(size(Xcent,1),1)]']';
+
+figure(icent)
+dcm = datacursormode( gcf );
+dcm.UpdateFcn = @NewCallback;
+clf
+subplot(311)
+hold on
+myplot3(locX,'b.')
+myplot3(locY,'ro')
+axis equal
+title(sprintf('%d/%d/%d',shift))
+subplot(312)
+hold on
+myplot3(locX_fc,'b.')
+myplot3(locY_fc,'ro')
+axis equal
+title(sprintf('%d/%d/%d',round(shift_fc)))
+
+figure(icent*10)
+dcm = datacursormode( gcf );
+dcm.UpdateFcn = @NewCallback;
+clf
+subplot(311)
+hold on
+myplot3(Xcent,'b.')
+myplot3(Ycent+shift,'ro')
+axis equal
+title(sprintf('%d/%d/%d',shift))
+subplot(312)
+hold on
+myplot3(Xcent_fc,'b.')
+myplot3(Ycent_fc+shift_fc,'ro')
+axis equal
+title(sprintf('%d/%d/%d',round(shift_fc)))
+
+%%
+figure(icent)
+dcm = datacursormode( gcf );
+dcm.UpdateFcn = @NewCallback;
+clf
+subplot(311)
+hold on
+myplot3(Xcent,'b.')
+myplot3(Ycent+shift,'ro')
+axis equal
+title(sprintf('%d/%d/%d',shift))
+subplot(312)
+hold on
+myplot3(Xcent_fc,'b.')
+myplot3(Ycent_fc+shift_fc,'ro')
+axis equal
+title(sprintf('%d/%d/%d',round(shift_fc)))
+datacursormode(gcf)
+
+%%
+
+
+
+%%
 % for debugging scripts
 ineig = 5163
 tifname = scopeloc.filepath{ineig}

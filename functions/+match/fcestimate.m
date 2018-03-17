@@ -64,6 +64,7 @@ if isfield(params,'init')
 else
     pinit = [median(y) 1e-5 median(x)];
 end
+%%
 % turn off warning
 warning off
 %TODO: very inefficient, find a robust way to pick inflection sign
@@ -75,12 +76,35 @@ if abs(out(2))<sqrt(eps) % mostlikely a line, p(1) is not reliable
     out(2) = 0; % to prevent scaling error in fc images
 end
 warning on
-
+%%
 % outlier rejection based on parametric model
 xest = feval(model,out,y);
 outliers = abs(x-xest)>2;
 X_ = X_(~outliers,:);
 Y_ = Y_(~outliers,:);
+
+% %%
+% figure, 
+% plot(y_inline(~outliers),x_inline(~outliers),'.')
+% hold on
+% plot(y_inline,feval(model,out,y_inline),'.')
+% 
+% %%
+% out=out1
+% xest = feval(model,out,y);
+% xline = feval(model,out,min(y):max(y));
+% outliers = abs(x-xest)>2;
+% % X_ = X_(~outliers,:);
+% % Y_ = Y_(~outliers,:);
+% 
+% shift = median(dispvec);
+% figure
+% myplot3(X_,'.')
+% hold on
+% X_2 = X_;
+% X_2(:,2) = xest;
+% myplot3(X_2,'o')
+% axis equal
 
 
 

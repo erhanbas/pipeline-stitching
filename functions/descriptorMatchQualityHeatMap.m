@@ -112,7 +112,7 @@ loops = latticeZRange(end)-latticeZRange(1);
 F(loops) = struct('cdata',[],'colormap',[]);
 iter=1;
 
-for t = 780%latticeZRange(1:end-1)'%[779,780]%
+for t = latticeZRange(1:end-1)'%[779,780]%
     %%
     % idxtest = sliceinds(375)
     ix = (scopeloc.gridix(:,3)'==t);
@@ -163,10 +163,10 @@ for t = 780%latticeZRange(1:end-1)'%[779,780]%
 
     clear theseinds
     %theseinds=1:sum(ix);
-    theseinds(1)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==33&scopeloc.gridix(:,3)==t));
-    theseinds(2)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==34&scopeloc.gridix(:,3)==t));
-    
-    for ii=[theseinds]%1:sum(ix)
+%     theseinds(1)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==33&scopeloc.gridix(:,3)==t));
+%     theseinds(2)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==34&scopeloc.gridix(:,3)==t));
+    theseinds = 1:sum(ix);
+    for ii=theseinds
         rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
         xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
         yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];

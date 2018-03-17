@@ -24,7 +24,7 @@ directions = 'Z';
 
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-brain = '2017-09-25';
+brain = '2018-03-09';
 tag='';
 
 % classifierinput = inputfolder;
@@ -34,15 +34,18 @@ inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/
 piperun = 1;
 
 if piperun
-    pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
-    pipelineoutputfolder = '/nrs/mouselight/cluster/sandbox2/2017-12-19-vs3'
-    classifierinput = inputfolder;
-    classifieroutput = fullfile(pipelineoutputfolder,'prob')
-    descinput = classifieroutput;
-    descoutput = fullfile(pipelineoutputfolder,'desc')
-    descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
-    matchinput = descoutput;
-    matchoutput = fullfile(pipelineoutputfolder,'match')
+    if brain=='2017-09-25'
+        pipelineoutputfolder = '/nrs/mouselight/cluster/sandbox2/2017-12-19-vs3';
+        classifierinput = inputfolder;
+        descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
+    else
+        pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+        classifieroutput = fullfile(pipelineoutputfolder,'prob')
+        descinput = classifieroutput;
+        descoutput = fullfile(pipelineoutputfolder,'desc')
+        matchinput = descoutput;
+        matchoutput = fullfile(pipelineoutputfolder,'match')
+    end
 end
 
 experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s',brain);
@@ -120,35 +123,53 @@ end
 % equations
 
 if 1
+    
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
+    % paramater setting for descrtiptor match
+    scopeacqparams = util.readScopeFile(fileparts(scopeloc.filepath{1}));
+    % params.sample = brain;
+    params.scopeacqparams = scopeacqparams;
+    params.viz = 0;
+    params.debug = 0;
+    params.Ndivs = 4;
+    params.Nlayer = 4;
+    params.htop = 5;
+    params.expensionratio = 1;
+    params.imagesize = [1024 1536 251];
+    params.imsize_um = [scopeacqparams.x_size_um scopeacqparams.y_size_um scopeacqparams.z_size_um];
+    params.overlap_um = [scopeacqparams.x_overlap_um scopeacqparams.y_overlap_um scopeacqparams.z_overlap_um];
+    params.order = 1;
+    params.applyFC = 1;
+    params.beadparams = [];%PLACEHOLDER FOR BEADS, very unlikely to have it...
+    params.singleTile = 1;
+
     if 1
-        [descriptors,paireddescriptor_,curvemodel_,scopeparams_,paireddescriptor,curvemodel,scopeparams] = ...
-            tileProcessor(scopeloc,descriptorfolder,desc_ch);
+        [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
+            tileProcessor(scopeloc,descriptorfolder,desc_ch,params);
         save(descriptorfile,'descriptors','-v7.3')
         save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-            'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
-            'curvemodel_','params','-v7.3')
+            'scopeparams', 'curvemodel','params','-v7.3')
     else
         descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
         [paireddescriptor, scopeparams, R, curvemodel,scopeparams_, paireddescriptor_,curvemodel_] = ...
             estimateFCpertile(descriptors,neighbors,scopeloc,params); %#ok<ASGLU>
         save(descriptorfile,'descriptors','-v7.3')
-        save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+        save(fullfile(matfolder,'scopeparams_pertile_singletile'),'paireddescriptor', ...
             'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
             'curvemodel_','params')
     end
 end
 
 %%
-if 0
+if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
     videofile = sprintf('./videos/%s-1stiter-ch1-%s',brain,date)
     % descriptorMatchQuality(regpts,scopeparams,scopeloc,videofile)
     %     createThumb(regpts,scopeparams,scopeloc,videofile)
-    descriptorMatchQualityHeatMap(regpts,scopeparams,scopeloc,videofile)
+    descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
 end
 
 %%
@@ -156,26 +177,26 @@ if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-        'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
-        'curvemodel_','params')
+        'scopeparams', 'curvemodel','params')
     
-    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams_,curvemodel_,778:782);
+    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams{end},curvemodel{end},[]);
     if 1
         save(fullfile(matfolder,sprintf('%s_%s',datestr(now,'mmddyyHHMMSS'),'vecfield3D')),'vecfield3D','params')
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
     end
 end
 
-% 4
+%% 4
 load(scopefile,'scopeloc','neighbors','imsize_um','experimentfolder','inputfolder')
 load(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
+%%
 vecfield = vecfield3D;
 
 % checkthese = [1 4 5 7]; % 0 - right - bottom - below
 % [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
 params.big = 1;
 params.ymldims = [params.imagesize 2];%[1024 1536 251 2]
-sub = 1;
+sub = 0;
 params.root = vecfield.root;
 
 if sub
