@@ -4,6 +4,9 @@ if 1
     if 1
         st=[219,34,780]-1;%[192,124,1049];
         ed=st+2;
+        st(3)=780
+        ed(3)=780
+        
 %         st = scopeloc.gridix(1971,1:3)-1;
 %         ed=st+2;
     elseif 0

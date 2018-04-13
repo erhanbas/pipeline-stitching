@@ -74,12 +74,24 @@ parfor t = theselayers
     end
     % apply field curvature correction to each tile in layer_t and get the
     % data matrix
-    [X,sdisp] = util.createDataMatrix(params,curvemodel,paireddescriptor,scopeloc,idxinlayer);
     %%
+    [X,sdisp] = util.createDataMatrix(params,curvemodel,paireddescriptor,scopeloc,idxinlayer);
     % AX~b: A = b\X
     Aest = sdisp/X; 
-    Aest(3,3:3:end) = 1; %BULLSHIT: since we dont have bead experiment, we assume no z-skewedness
+    
+    res=Aest*X-sdisp;
+    res = sqrt(sum(res.^2));
+    Aest2 = sdisp(:,res<1)/X(:,res<1);
+    
     Aest = reshape(Aest,3,3,[]);
+    Aest2 = reshape(Aest2,3,3,[]);
+    Aest=Aest2;
+    
+    
+    
+    
+    
+    %%
     Aest_big{t} = Aest;
     
 end

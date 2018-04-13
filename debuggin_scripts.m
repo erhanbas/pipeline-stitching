@@ -16,30 +16,63 @@ hold on
 myplot3(Y_,'.')
 
 %%
-icent = 5136
-ineig = 5163
-
-% icent = 5461
-% ineig = 5488
-
-Acent = -scopeparams{1}(icent).affineglFC/1e3;
-Aneig = -scopeparams{1}(ineig).affineglFC/1e3;
-Xcent = paireddescriptor_{icent}.ony.X;
-Ycent = paireddescriptor_{icent}.ony.Y;
-
-order = params.order;
-dims = params.imagesize;
 xlocs = 1:dims(1);
 ylocs = 1:dims(2);
 [xy2,xy1] = ndgrid(ylocs(:),xlocs(:));
 xy = [xy1(:),xy2(:)];
+order = params.order;
+dims = params.imagesize;
+%%
+icent = 5136
+ineig = 5163
 
-[Xcent_fc] = util.fcshift(curvemodel(:,:,icent),order,xy,dims,Xcent+1);
+% ineig=5136
+kk=3
+
+% icent = 5461
+% ineig = 5488
+% Acent = -scopeparams{2}(icent).affineglFC/1e3;
+Acent = -glSFC_2/1e3
+Aneig = Acent;%-scopeparams{2}(ineig).affineglFC/1e3;
+
+Xcent = paireddescriptor{3}{icent}.ony.X;
+Ycent = paireddescriptor{3}{icent}.ony.Y;
+cur_cent=curvemodel{3}(:,:,icent);
+cur_neig=curvemodel{3}(:,:,ineig);
+
+% Xcent = paireddescriptor{icent}.ony.X;
+% Ycent = paireddescriptor{icent}.ony.Y;
+% cur_cent=curvemodel(:,:,icent);
+% cur_neig=curvemodel(:,:,ineig);
+
+% cur(2,2)= 0;
+[Xcent_fc,xshift2D,yshift2D] = util.fcshift(cur_cent,order,xy,dims,Xcent+1);
 Xcent_fc = Xcent_fc-1;
-
-[Ycent_fc] = util.fcshift(curvemodel(:,:,icent),order,xy,dims,Ycent+1);
+[Ycent_fc] = util.fcshift(cur_neig,order,xy,dims,Ycent+1);
 Ycent_fc = Ycent_fc-1;
 
+
+% sdisp = ones(size(Xcent,1),1)*1000*(scopeloc.loc(icent,:)-scopeloc.loc(ineig,:));
+% Acent_ = sdisp'/[Ycent-Xcent]';
+% res=Acent_*Ycent' -[ Acent_*Xcent'+(scopeloc.loc(icent,:)-scopeloc.loc(ineig,:))'*1000];
+% norm(res(2,:))
+
+% Acent_ = sdisp'/[Ycent_fc-Xcent_fc]';
+% res=Acent_*(Ycent_fc - Xcent_fc)'-(scopeloc.loc(icent,:)-scopeloc.loc(ineig,:))'*1000;
+% (abs(res(2,:)))>.35 % 1 pix
+% 
+% figure
+% myplot3(Xcent,'b.')
+% %%
+% glSFC_ = sdisp/DallFC
+% res = [glSFC_*(Dall)-sdisp]/1e3;
+% res = sqrt(sum(res.^2,1));
+% 
+% glSFC_2 = sdisp(:,res<.5)/DallFC(:,res<.5)
+% 
+% max(sqrt(sum(res.^2,1)))
+
+%
 shift = median(Xcent-Ycent);
 shift_fc = median(Xcent_fc-Ycent_fc);
 locX = [[Acent 1e3*scopeloc.loc(icent,:)']*[Xcent ones(size(Xcent,1),1)]']';
@@ -47,40 +80,47 @@ locY = [[Aneig 1e3*scopeloc.loc(ineig,:)']*[Ycent ones(size(Xcent,1),1)]']';
 locX_fc = [[Acent 1e3*scopeloc.loc(icent,:)']*[Xcent_fc ones(size(Xcent,1),1)]']';
 locY_fc = [[Aneig 1e3*scopeloc.loc(ineig,:)']*[Ycent_fc ones(size(Xcent,1),1)]']';
 
-figure(icent)
+figure(icent+kk)
 dcm = datacursormode( gcf );
 dcm.UpdateFcn = @NewCallback;
 clf
 subplot(311)
 hold on
 myplot3(locX,'b.')
+myplot3(locX(25,:),'r*')
 myplot3(locY,'ro')
 axis equal
-title(sprintf('%d/%d/%d',shift))
+set(gca,'YDir','reverse')
+title(sprintf('%d/%d/%d/-',shift))
 subplot(312)
 hold on
 myplot3(locX_fc,'b.')
 myplot3(locY_fc,'ro')
 axis equal
-title(sprintf('%d/%d/%d',round(shift_fc)))
+set(gca,'YDir','reverse')
+title(sprintf('%d/%d/%d/fc',round(shift_fc)))
 
-figure(icent*10)
-dcm = datacursormode( gcf );
-dcm.UpdateFcn = @NewCallback;
-clf
-subplot(311)
-hold on
-myplot3(Xcent,'b.')
-myplot3(Ycent+shift,'ro')
-axis equal
-title(sprintf('%d/%d/%d',shift))
-subplot(312)
-hold on
-myplot3(Xcent_fc,'b.')
-myplot3(Ycent_fc+shift_fc,'ro')
-axis equal
-title(sprintf('%d/%d/%d',round(shift_fc)))
-
+if 1
+    figure(icent*10+kk)
+    dcm = datacursormode( gcf );
+    dcm.UpdateFcn = @NewCallback;
+    clf
+    subplot(311)
+    hold on
+    myplot3(Xcent,'b.')
+    myplot3(Xcent(25,:),'b*')
+    myplot3(Ycent+shift,'ro')
+    set(gca,'YDir','reverse')
+    axis equal
+    title(sprintf('%d/%d/%d',shift))
+    subplot(312)
+    hold on
+    myplot3(Xcent_fc,'b.')
+    myplot3(Ycent_fc+shift_fc,'ro')
+    set(gca,'YDir','reverse')
+    axis equal
+    title(sprintf('%d/%d/%d',round(shift_fc)))
+end
 %%
 figure(icent)
 dcm = datacursormode( gcf );
@@ -106,7 +146,7 @@ datacursormode(gcf)
 
 %%
 % for debugging scripts
-ineig = 5163
+ineig = 5136
 tifname = scopeloc.filepath{ineig}
 filefold = fileparts(tifname);
 [~,tifname] = fileparts(filefold);
@@ -130,6 +170,8 @@ In = mytiffread(tifpath);
 %%
 ImC = max(Ic,[],3);
 ImN = max(In,[],3);
+ImX = ImC;
+ImY = ImN;
 
 ImX = rot90(ImC,2);
 ImY = rot90(ImN,2);
@@ -147,6 +189,8 @@ plot(x,y,'m.')
 figure(11), cla
 imshow(ImX,[11 15]*1e3)
 hold on
+myplot3(Xcent,'o')
+%%
 myplot3(descent,'d')
 myplot3(X,'o')
 myplot3(X_,'go')
@@ -156,6 +200,8 @@ myplot3(X_,'go')
 figure(21), cla
 imshow(ImY,[11 15]*1e3)
 hold on
+myplot3(Y`cent,'o')
+%%
 myplot3(descadj-pixshift,'d')
 myplot3(Y-pixshift,'o')
 myplot3(Y_,'+')

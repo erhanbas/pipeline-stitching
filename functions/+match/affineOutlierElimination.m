@@ -1,4 +1,4 @@
-function [ scopeparams_ ,paireddescriptor,curvemodel] = affineOutlierElimination( scopeloc,scopeparams,paireddescriptor,curvemodel,unreliable )
+function [ scopeparams_ ,paireddescriptor,curvemodel] = affineOutlierElimination( scopeloc,scopeparams,paireddescriptor,curvemodel )
 %AFFINEOUTLIERELIMINATION Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -27,7 +27,7 @@ for ineig = 1:Nneig
     end
 end
 %%
-inliers = find(~unreliable&reliable(:));
+inliers = find(reliable(:));
 % for every tiles estimate an affine
 anchors = scopeloc.gridix(inliers,1:3);
 queries = scopeloc.gridix(:,1:3);

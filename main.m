@@ -24,7 +24,7 @@ directions = 'Z';
 
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-brain = '2017-09-25';
+brain = '2018-04-03';
 tag='';
 
 % classifierinput = inputfolder;
@@ -40,11 +40,11 @@ if piperun
         matchoutput = descoutput;
     else
         pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
-        classifieroutput = fullfile(pipelineoutputfolder,'prob')
+        classifieroutput = fullfile(pipelineoutputfolder,'probcopy')
         descinput = classifieroutput;
-        descoutput = fullfile(pipelineoutputfolder,'desc')
+        descoutput = fullfile(pipelineoutputfolder,'desccopy')
         matchinput = descoutput;
-        matchoutput = fullfile(pipelineoutputfolder,'match')
+        matchoutput = fullfile(pipelineoutputfolder,'matchcopy')
     end
 end
 
@@ -63,25 +63,27 @@ else
     matchfolder = descriptorfolder;
 end
 
-desc_ch = {'1'};
+desc_ch = {'0'};
 descriptorfile = fullfile(matfolder,sprintf('descriptors_ch%s.mat',desc_ch{:})); % accumulated descriptor file
 matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % accumulated descriptor file
 
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if 0
+if 1
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
     save(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
 end
+
 %% BULLSHIT CURATION STUFF
 % obsolute after pipeline, TODO: fix missing condition for tile runs
 % rather then channel logs
 if 0
     curationH5(classifierinput,classifieroutput)
 end
+
 if 0
     % checkmissingProb(classifierinput,classifieroutput)
     checkmissingDesc(descinput,descoutput)
@@ -90,7 +92,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if 0
+if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -103,7 +105,7 @@ if 0
     end
 end
 
-if 0 % iterate on missing tiles (ANOTHER BULLSHIT)
+if 1 % iterate on missing tiles (ANOTHER BULLSHIT)
     
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
@@ -122,7 +124,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if 0
+if 1
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -145,7 +147,7 @@ if 0
     params.singleTile = 1;
 
     if 1
-        if 1
+        if 0
             [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
                 tileProcessor_debug(scopeloc,descriptorfolder,desc_ch,params);
         else
@@ -167,7 +169,7 @@ if 0
 end
 
 %%
-if 0
+if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')

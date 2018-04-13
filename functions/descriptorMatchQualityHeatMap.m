@@ -111,69 +111,47 @@ hold on
 loops = latticeZRange(end)-latticeZRange(1);
 F(loops) = struct('cdata',[],'colormap',[]);
 iter=1;
-
+%%
 for t = latticeZRange(1:end-1)'%[779,780]%
     %%
-    % idxtest = sliceinds(375)
     ix = (scopeloc.gridix(:,3)'==t);
-    sliceinds = find(ix);
-    if any(sliceinds)
-    end
+    x = scopeloc.loc(ix,1)*1e6-scopeparams(1).imsize_um(1)*1e3;
+    y = scopeloc.loc(ix,2)*1e6-scopeparams(1).imsize_um(1)*1e3;
+    w = scopeparams(1).imsize_um(1)*ones(sum(ix),1)*1e3;
+    h = scopeparams(1).imsize_um(2)*ones(sum(ix),1)*1e3;
+    clear theseinds
+    theseinds = 1:sum(ix);
     if t>size(XYZ_t,2)
         F(iter) = getframe;
         iter=iter+1;
         continue
     end
-    
+    emptyslice = isempty(XYZ_t{t});
     %%
-%     myfig=t
+    if emptyslice
+        [X,Y,Z,xyz,valsXY,valsXYZ,U,V,W] = deal([]);
+    else
+        X = XYZ_t{t}(:,1);
+        Y = XYZ_t{t}(:,2);
+        Z = XYZ_t{t}(:,3);
+        U = XYZ_tp1{t}(:,1)-XYZ_t{t}(:,1);
+        V = XYZ_tp1{t}(:,2)-XYZ_t{t}(:,2);
+        W = XYZ_tp1{t}(:,3)-XYZ_t{t}(:,3);
+        
+        MXYZ = sqrt(U.^2+V.^2+W.^2)/1e3;
+        MXY = sqrt(U.^2+V.^2)/1e3;
+        FxXY = scatteredInterpolant(XYZ_tp1{t},MXY,'linear','nearest');
+        FxXYZ = scatteredInterpolant(XYZ_tp1{t},MXYZ,'linear','nearest');
+        xyz = scopeloc.loc(ix,:)*1e6;
+        valsXY = FxXY(xyz);
+        valsXYZ = FxXYZ(xyz);
+    end
+    %% initalize canvas
     figure(myfig), cla, clf
-%     if isempty( XYZ_t{t})
-%         continue
-%     end
-    
-    X = XYZ_t{t}(:,1);
-    Y = XYZ_t{t}(:,2);
-    Z = XYZ_t{t}(:,3);
-    U = XYZ_tp1{t}(:,1)-XYZ_t{t}(:,1);
-    V = XYZ_tp1{t}(:,2)-XYZ_t{t}(:,2);
-    W = XYZ_tp1{t}(:,3)-XYZ_t{t}(:,3);
-    
-    MXYZ = sqrt(U.^2+V.^2+W.^2)/1e3;
-    MXY = sqrt(U.^2+V.^2)/1e3;
-    FxXY = scatteredInterpolant(XYZ_tp1{t},MXY,'linear','nearest');
-    FxXYZ = scatteredInterpolant(XYZ_tp1{t},MXYZ,'linear','nearest');
-    xyz = scopeloc.loc(ix,:)*1e6;
-    valsXY = FxXY(xyz);
-    valsXYZ = FxXYZ(xyz);
-    x = scopeloc.loc(ix,1)*1e6-scopeparams(1).imsize_um(1)*1e3;
-    y = scopeloc.loc(ix,2)*1e6-scopeparams(1).imsize_um(1)*1e3;
-    w = scopeparams(1).imsize_um(1)*ones(sum(ix),1)*1e3;
-    h = scopeparams(1).imsize_um(2)*ones(sum(ix),1)*1e3;
-    
-    colormap(newMap)
-    fix = find(ix);
-    figure(myfig)
-    
     h1=subaxis(2, 1, 1, 'sh', 0.03, 'sv', -0.03, 'padding', .04, 'margin', 0);
     cla, hold on
-    
     disp(['    Layer ' num2str(t) ' of ' num2str(max(scopeloc.gridix(:,3)))]);
     caxis([min(ranXYZ(ranXYZ>0)) max(ranXYZ)*.9])
-
-    clear theseinds
-    %theseinds=1:sum(ix);
-%     theseinds(1)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==33&scopeloc.gridix(:,3)==t));
-%     theseinds(2)=find(find(ix)==find(scopeloc.gridix(:,1)==219&scopeloc.gridix(:,2)==34&scopeloc.gridix(:,3)==t));
-    theseinds = 1:sum(ix);
-    for ii=theseinds
-        rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
-        xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
-        yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
-        patch(xp,yp,sqrt(valsXYZ(ii)^2-valsXY(ii)^2))
-    end
-    scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
-        'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.3)
     set(h1, 'XTick', []);
     set(h1, 'YTick', []);
     set(h1,'Color',[1 1 1]*.5)
@@ -186,11 +164,25 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     text(Rmin(1)+5e5,Rmin(2)+7e5,'Z',...
         'FontSize',40,'Color','k','HorizontalAlignment','left')
     view(0,90)
-    axis equal
     colorbar
+    colormap(newMap)
+    
+    for ii=theseinds
+        rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
+        if ~emptyslice
+            xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
+            yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
+            patch(xp,yp,sqrt(valsXYZ(ii)^2-valsXY(ii)^2))
+        end
+    end
+    if ~emptyslice
+    scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
+        'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.3)
+    end
+    axis equal
     xlim([Rmin(1) Rmax(1)])
     ylim([Rmin(2) Rmax(2)])
-
+    %%
     h2=subaxis(2, 1, 2, 'sh', 0.03, 'sv', -0.03, 'padding', 0.04, 'margin', 0);
     cla, hold on
     set(h2, 'XTick', []);
@@ -208,48 +200,53 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     caxis([min(ranXY(ranXY>0)) max(ranXY)*.9])
     for ii=1:sum(ix)
         rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
+        if emptyslice
+            continue
+        end
+
         xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
         yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
         patch(xp,yp,valsXY(ii))
-%         if length(vec{t})>=fix(ii)
-%             vv=vec{t}{fix(ii)};
-%             if ~isempty(vv)
-%                 vv=normr(vv(1:2));
-%                 %                 quiver(x(ii)+w(ii)/2,y(ii)+h(ii)/2,vv(1),vv(2),w(ii)/4,...
-%                 %                     'LineWidth',2,'Color','m','MaxHeadSize',4)
-%                 
-%                 headWidth = 6;
-%                 headLength = 3;
-%                 ah = annotation('arrow',...
-%                     'headStyle','plain',...
-%                     'HeadLength',headLength,'HeadWidth',headWidth,...
-%                     'Color','r');
-%                 set(ah,'parent',gca);
-%                 
-%                 x0 = x(ii)+w(ii)/2;
-%                 y0 = y(ii)+h(ii)/2;
-%                 vx0 = vv(1)*w(ii)/3;
-%                 vy0 = vv(2)*h(ii)/3;
-%                 
-%                 xn0 = (x0-Rmin(1))/(Rmax(1)-Rmin(1));
-%                 yn0 = (y0-Rmin(2))/(Rmax(2)-Rmin(2));
-%                 vnx0 = vx0/(Rmax(1)-Rmin(1));
-%                 vny0 = vy0/(Rmax(2)-Rmin(2));
-%                 set(ah,'position',[x(ii)+w(ii)/2,y(ii)+h(ii)/2,vv(1)*w(ii)/3,vv(2)*h(ii)/3]);
-%                 set(ah,'position',[xn0,yn0,vnx0,vny0]);
-%             end
-%         end
+        %         if length(vec{t})>=fix(ii)
+        %             vv=vec{t}{fix(ii)};
+        %             if ~isempty(vv)
+        %                 vv=normr(vv(1:2));
+        %                 %                 quiver(x(ii)+w(ii)/2,y(ii)+h(ii)/2,vv(1),vv(2),w(ii)/4,...
+        %                 %                     'LineWidth',2,'Color','m','MaxHeadSize',4)
+        %
+        %                 headWidth = 6;
+        %                 headLength = 3;
+        %                 ah = annotation('arrow',...
+        %                     'headStyle','plain',...
+        %                     'HeadLength',headLength,'HeadWidth',headWidth,...
+        %                     'Color','r');
+        %                 set(ah,'parent',gca);
+        %
+        %                 x0 = x(ii)+w(ii)/2;
+        %                 y0 = y(ii)+h(ii)/2;
+        %                 vx0 = vv(1)*w(ii)/3;
+        %                 vy0 = vv(2)*h(ii)/3;
+        %
+        %                 xn0 = (x0-Rmin(1))/(Rmax(1)-Rmin(1));
+        %                 yn0 = (y0-Rmin(2))/(Rmax(2)-Rmin(2));
+        %                 vnx0 = vx0/(Rmax(1)-Rmin(1));
+        %                 vny0 = vy0/(Rmax(2)-Rmin(2));
+        %                 set(ah,'position',[x(ii)+w(ii)/2,y(ii)+h(ii)/2,vv(1)*w(ii)/3,vv(2)*h(ii)/3]);
+        %                 set(ah,'position',[xn0,yn0,vnx0,vny0]);
+        %             end
+        %         end
     end
-    
-    scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
-        'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.3)
-
+    1
+    if ~emptyslice
+        scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
+            'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.3)
+    end
     
     text(Rmin(1)+5e5,Rmin(2)+7e5,'Lateral',...
         'FontSize',40,'Color','k','HorizontalAlignment','left')
     text(Rmin(1)+1e5,Rmax(2)-7e5,num2str(t),...
         'FontSize',40,'Color','k','HorizontalAlignment','left')
-
+    
     xlim([Rmin(1) Rmax(1)])
     ylim([Rmin(2) Rmax(2)])
     drawnow

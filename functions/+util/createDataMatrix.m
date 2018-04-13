@@ -13,7 +13,7 @@ flagfc = 1;
 X = [];
 sdisp=[];
 for ic = 1:Ntiles_inlayer
-    %%     
+    %%
     % on x Ac*Xc-An*Xn=D
     ic_c = idxinlayer(ic);
     paireddescriptor_ic = paireddescriptor{ic_c};
@@ -22,11 +22,11 @@ for ic = 1:Ntiles_inlayer
     Xc = paireddescriptor{ic_c}.onx.X;
     Xn = paireddescriptor{ic_c}.onx.Y;
     sampleSizeforTile = size(Xc,1);
-%%
+    %%
     if isnan(ic_n) | ~sampleSizeforTile
         continue
     end
-%%    
+    %%
     % fix FC
     subXc = Xc+1;
     subXn = Xn+1;
@@ -34,11 +34,11 @@ for ic = 1:Ntiles_inlayer
     fcXc = locs-1;
     [locs,xshift2D,yshift2D] = util.fcshift(curvemodel(:,:,ic_n),order,xy,dims,subXn);
     fcXn = locs-1;
-%%    
+    %%
     if ~sampleSizeforTile;continue;end
-%%
+    %%
     sdisp{ic} = [1000*(scopeloc.loc(ic_c,:)-scopeloc.loc(ic_n,:))]'*ones(1,sampleSizeforTile);
-    Xsamp = zeros(3,Ntiles_inlayer);
+    Xsamp = zeros(3,Ntiles_inlayer); % append [0;0;0] for z+1 match
     Xtile = [];
     for ii=1:sampleSizeforTile
         if flagfc
@@ -58,7 +58,7 @@ xsdisp = cat(2,sdisp{:});
 X = [];
 sdisp=[];
 for ic = 1:Ntiles_inlayer
-    %%     
+    %%
     % on x Ac*Xc-An*Xn=D
     ic_c = idxinlayer(ic);
     paireddescriptor_ic = paireddescriptor{ic_c};
@@ -81,52 +81,19 @@ for ic = 1:Ntiles_inlayer
 end
 yX = cat(2,X{:});
 ysdisp = cat(2,sdisp{:});
-% %% since we dont have bead, just 0/250 pad for z
-% X = [];
-% sdisp=[];
-% for ic = 1:Ntiles_inlayer
-%     %%     
-%     % on x Ac*Xc-An*Xn=D
-%     ic_c = idxinlayer(ic);
-%     paireddescriptor_ic = paireddescriptor{ic_c};
-%     ic_n = paireddescriptor_ic.neigs(4);
-%     if isnan(ic_n);continue;end
-%     icx_inlayer = find(ic_n==idxinlayer);
-%     Xc = paireddescriptor{ic_c}.ony.X;
-%     Xn = paireddescriptor{ic_c}.ony.Y;
-%     sampleSizeforTile = size(Xc,1);
-%     if ~sampleSizeforTile;continue;end
-%     sdisp{ic} = [1000*(scopeloc.loc(ic_c,:)-scopeloc.loc(ic_n,:))]'*ones(1,sampleSizeforTile);
-%     Xsamp = zeros(3,Ntiles_inlayer);
-%     Xtile = [];
-%     for ii=1:sampleSizeforTile
-%         Xsamp(:,ic) = Xc(ii,:);
-%         Xsamp(:,icx_inlayer) = -Xn(ii,:);
-%         Xtile{ii} = Xsamp(:);
-%     end
-%     X{ic} = cat(2,Xtile{:});
-% end
-% zX = cat(2,X{:});
-% zsdisp = cat(2,sdisp{:});
-% %%
-X = [xX yX];
-sdisp = [xsdisp ysdisp];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+%%
+if 1
+    % %% since we dont have bead, just 0/250 pad for z
+    numZ = floor((size(xX,2)+size(yX,2))/2/Ntiles_inlayer);
+    zX = zeros(3*Ntiles_inlayer,numZ*Ntiles_inlayer);
+    for it=1:Ntiles_inlayer
+        zX((it-1)*3+[1:3],(it-1)*numZ+[1:numZ]) = [0;0;dims(3)-1]*ones(1,numZ);
+    end
+    zsdisp = zeros(3,size(zX,2)); zsdisp(end,:) = -(dims(3)-1);
+    %%
+    X = [xX yX zX];
+    sdisp = [xsdisp ysdisp zsdisp];
+else
+    X = [xX yX];
+    sdisp = [xsdisp ysdisp];
+end
