@@ -124,7 +124,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if 1
+if 0
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -180,7 +180,7 @@ if 0
 end
 
 %%
-if 1
+if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
@@ -203,7 +203,7 @@ vecfield = vecfield3D;
 % [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
 params.big = 1;
 params.ymldims = [params.imagesize 2];%[1024 1536 251 2]
-sub = 0;
+sub = 1;
 params.root = vecfield.root;
 
 if sub
