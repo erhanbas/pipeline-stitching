@@ -8,7 +8,7 @@ checkthese = [1 4 5 7]; % 0 - right - bottom - below
 %% get tile descriptors
 descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
 
-%% descriptor match
+%% descriptor match 3785:3789
 [paireddescriptor{end+1},R{end+1},curvemodel{end+1}] = match.xymatch(descriptors,neighbors(:,checkthese),scopeloc,params);
 
 %%

@@ -56,6 +56,7 @@ badtiles = nummatches<numthr & ~isnan(neighbors(:,directionMap(directions)));
 % (filename,from,to,numcores,exitcode)
 outlistfile = fullfile(pwd,'shfiles',sprintf('outlistfile_%s_%s.txt',brain,date));
 if ~runlocal;fid = fopen(outlistfile,'w');end
+try parfor_progress(0);catch;end
 parfor_progress(length(badtiles))
 parfor ii = 1:length(badtiles)
     if ~badtiles(ii)

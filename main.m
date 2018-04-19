@@ -70,7 +70,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if 1
+if 0
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -92,7 +92,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if 1
+if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -105,7 +105,7 @@ if 1
     end
 end
 
-if 1 % iterate on missing tiles (ANOTHER BULLSHIT)
+if 0 % iterate on missing tiles (ANOTHER BULLSHIT)
     
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
@@ -169,7 +169,7 @@ if 1
 end
 
 %%
-if 1
+if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
@@ -186,7 +186,7 @@ if 1
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
         'scopeparams', 'curvemodel','params')
     
-    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams{end},curvemodel{end},[779:781]);
+    vecfield3D = vectorField3D(params,scopeloc,regpts,scopeparams{end},curvemodel{end},[]);
     if 1
         save(fullfile(matfolder,sprintf('%s_%s',datestr(now,'mmddyyHHMMSS'),'vecfield3D')),'vecfield3D','params')
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')

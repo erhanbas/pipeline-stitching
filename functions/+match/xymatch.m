@@ -51,7 +51,10 @@ matchparams.debug = debug;
 matchparams.viz = viz;
 matchparams.fignum = fignum;
 matchparams.opt.beta=2;
-matchparams.opt.method = 'nonrigid';
+% matchparams.opt.method = 'nonrigid';
+matchparams.init(1,:)=[765 1e-5 867];
+matchparams.init(2,:)=[537 -1e-5 1445];
+
 %%
 % checkthese = [1 4 5 7]; % 0 - right - bottom - below
 % indicies are 1 based,e.g. x = 1:dims(1), not 0:dims(1)-1

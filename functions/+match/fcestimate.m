@@ -6,6 +6,11 @@ viz = params.viz;
 % model = @(p,y) p(3) - p(2).*((y-p(1)).^2); % FC model
 model = params.model;
 optimopts = params.optimopts;
+if isfield(params,'dims')
+    dims = params.dims;
+else
+    dims = [1024 1536 251];
+end
 dispvec = X_-Y_;
 y = dispvec(:,iadj);
 
@@ -19,7 +24,6 @@ elseif length(normvcomp)>20 & 0
     normvcomp = vcomp-ones(size(vcomp,1),1)*medvcomp;
     normvcomp = sqrt(sum(normvcomp.*normvcomp,2));
     validinds = normvcomp<util.get1DThresh(normvcomp,20,.95);
-else 0
 end
 
 X_ = X_(validinds,:);
@@ -27,25 +31,62 @@ Y_ = Y_(validinds,:);
 y = y(validinds,:);
 
 x = X_(:,setdiff([1 2],iadj));
-
+dimcent = dims(setdiff([1:2],iadj))/2; % center of image along curvature axis
+% polynomial coeeficients (p3-p2(y-p1)^2):
+% p(1) : imaging center ~ dims/2 +/- %10
+% p(2) : curvature: -/+[1e-5 1e-6] for x & y, use initialization if
+% avaliable, curvature might flip sign based on objective or reduce to 0 as
+% medium changes (due to temperature or adding liquid solution, etc.)
+% p(3): avarage displacement: between [[1-%overlap]*dims dims],
+% initialization might not be useful, as this reduces to mean descriptor
+% displacement
 if isfield(params,'init')
     pinit = params.init(iadj,:);
+    pinit(3) = median(y); 
 else
-    pinit = [median(y) 1e-5 median(x)];
+    pinit = [dimcent -dimcent^-2 median(y)]; 
 end
+% set upper and lower boundaries
+% imaging center is around image center
+lb1 = dimcent-dimcent*0.1;
+ub1 = dimcent+dimcent*0.1;
+% curvature should rely on initialization as magnitude and sign might change
+% percent ratios do not make sense here as this number get squared, so
+% provide a large range
+lb2 = -1e-4; % (dims/2).^2*lb2 ~ [25 60] pixels in x & y
+ub2 = 1e-4; 
+% mean displacement is initialized based on descriptors
+lb3 = pinit(3)-pinit(3)*0.1;
+ub3 = pinit(3)+pinit(3)*0.1;
 
+ub = [ub1 ub2 ub3];
+lb = [lb1 lb2 lb3];
 %%
-% turn off warning
-warning off
-%TODO: very inefficient, find a robust way to pick inflection sign
-[out1,r1] = nlinfit(x, y, model, pinit,optimopts);
-[out2,r2] = nlinfit(x, y, model, pinit.*[1 -1 1],optimopts);
-if norm(r1)<norm(r2);out = out1;else out = out2;end
-
-if abs(out(2))<sqrt(eps) % mostlikely a line, p(1) is not reliable
-    out(2) = 0; % to prevent scaling error in fc images
+if 1
+    fun = @(p) sum((y-feval(model,p,x)).^2);
+    sqerr = @(p) sum((y-feval(model,p,x)).^2);
+    
+    options = optimoptions('fmincon','Display', 'off');
+    options.ConstraintTolerance = 1e-9;
+    options.OptimalityTolerance = 1e-9;
+    out = fmincon(fun,pinit,[],[],[],[],lb,ub,[],options);
+else
+    % turn off warning
+    warning off
+    %TODO: very inefficient, find a robust way to pick inflection sign
+    [out1,r1] = nlinfit(x, y, model, pinit,optimopts);
+    [out2,r2] = nlinfit(x, y, model, pinit.*[1 -1 1],optimopts);
+    if norm(r1)<norm(r2);out = out1;else out = out2;end
+    
+    if abs(out(2))<(dims(iadj)/2)^-2 % mostlikely a line, p(1) is not reliable
+        out(2) = 0; % to prevent scaling error in fc images
+    end
+    warning on
 end
-warning on
+% [ out.*[1 1e6 1] sqerr(out)]
+% modd = params.init(:,:);
+% modd(iadj,:) = out;
+% match.vizCurvature(modd)
 
 %%
 % outlier rejection based on parametric model
