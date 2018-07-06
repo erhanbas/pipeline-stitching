@@ -1,4 +1,4 @@
-function [outputArgs] = main()
+function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 %STICHING pipeline. Reads scope generated json file and returns a yml
 %configuration file that goes into renderer. Requires calling cluster jobs
 %to create subresults, i.e. descriptors. These functions can also run in
@@ -19,18 +19,29 @@ function [outputArgs] = main()
 % $Author: base $	$Date: 2016/09/21 11:52:40 $	$Revision: 0.1 $
 % Copyright: HHMI 2016
 %% MAKE SURE PATHS etc are correct
+% inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
+if nargin==0
+    brain = '2018-06-14';
+    inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
+    pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+    runfull = true;
+end
+
+if nargin==1
+    inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
+    pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+end
+
+%%
 directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
 directions = 'Z';
 
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-brain = '2018-04-03';
 tag='';
-
 % classifierinput = inputfolder;
 % raw input to descriptor generotion
-inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
-inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
+
 piperun = 1;
 
 if piperun
@@ -39,12 +50,11 @@ if piperun
         descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
         matchoutput = descoutput;
     else
-        pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
-        classifieroutput = fullfile(pipelineoutputfolder,'probcopy')
+        classifieroutput = fullfile(pipelineoutputfolder,'prob')
         descinput = classifieroutput;
-        descoutput = fullfile(pipelineoutputfolder,'desccopy')
+        descoutput = fullfile(pipelineoutputfolder,'desc')
         matchinput = descoutput;
-        matchoutput = fullfile(pipelineoutputfolder,'matchcopy')
+        matchoutput = fullfile(pipelineoutputfolder,'match')
     end
 end
 
@@ -70,7 +80,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if 0
+if runfull & 0
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -92,7 +102,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if 0
+if runfull & 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -124,7 +134,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if 0
+if runfull | 0
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -169,7 +179,7 @@ if 0
 end
 
 %%
-if 0
+if runfull | 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
@@ -180,7 +190,7 @@ if 0
 end
 
 %%
-if 0
+if runfull | 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
@@ -203,7 +213,7 @@ vecfield = vecfield3D;
 % [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
 params.big = 1;
 params.ymldims = [params.imagesize 2];%[1024 1536 251 2]
-sub = 1;
+sub = 0;
 params.root = vecfield.root;
 
 if sub

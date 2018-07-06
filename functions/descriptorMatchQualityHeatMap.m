@@ -161,8 +161,8 @@ for t = latticeZRange(1:end-1)'%[779,780]%
         'XColor'      , [.3 .3 .3], ...
         'YColor'      , [.3 .3 .3], ...
         'LineWidth'   , 10        );
-    text(Rmin(1)+5e5,Rmin(2)+7e5,'Z',...
-        'FontSize',40,'Color','k','HorizontalAlignment','left')
+%     text(Rmin(1)+5e5,Rmin(2)+7e5,'Z',...
+%         'FontSize',40,'Color','k','HorizontalAlignment','left')
     view(0,90)
     colorbar
     colormap(newMap)
@@ -177,7 +177,7 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     end
     if ~emptyslice
     scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
-        'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.3)
+        'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.5)
     end
     axis equal
     xlim([Rmin(1) Rmax(1)])
@@ -239,13 +239,13 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     1
     if ~emptyslice
         scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
-            'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.3)
+            'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.5)
     end
     
-    text(Rmin(1)+5e5,Rmin(2)+7e5,'Lateral',...
-        'FontSize',40,'Color','k','HorizontalAlignment','left')
-    text(Rmin(1)+1e5,Rmax(2)-7e5,num2str(t),...
-        'FontSize',40,'Color','k','HorizontalAlignment','left')
+%     text(Rmin(1)+5e5,Rmin(2)+7e5,'Lateral',...
+%         'FontSize',40,'Color','k','HorizontalAlignment','left')
+%     text(Rmin(1)+1e5,Rmax(2)-7e5,num2str(t),...
+%         'FontSize',40,'Color','k','HorizontalAlignment','left')
     
     xlim([Rmin(1) Rmax(1)])
     ylim([Rmin(2) Rmax(2)])

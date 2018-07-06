@@ -55,7 +55,7 @@ badtiles = nummatches<numthr & ~isnan(neighbors(:,directionMap(directions)));
 % values
 % (filename,from,to,numcores,exitcode)
 outlistfile = fullfile(pwd,'shfiles',sprintf('outlistfile_%s_%s.txt',brain,date));
-if ~runlocal;fid = fopen(outlistfile,'w');end
+if ~runlocal;fid = fopen(outlistfile,'w');else;fid=0;end
 try parfor_progress(0);catch;end
 parfor_progress(length(badtiles))
 parfor ii = 1:length(badtiles)
@@ -76,7 +76,6 @@ parfor ii = 1:length(badtiles)
         continue
     end
     if runlocal
-        ii
         try
             pointmatch(tile1,tile2,acqusitionfolder1,acqusitionfolder2,outfold,pixinit(ii,:),ch,maxnumofdesc,0);
         catch
