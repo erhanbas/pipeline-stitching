@@ -122,7 +122,7 @@ for idxt = 1:numTiles
     mindesc = round(min([layer(:,3) layerp1(:,3)],[],1));
     maxdesc = round(max([layer(:,3) layerp1(:,3)],[],1));
     pixstats(idxt,:) = [idxt  regpts{idxt}.neigs(4) meddesc mindesc maxdesc];
-    
+    pixstats(62,2:end) = pixstats(1162,2:end);
 end
 
 %%
@@ -136,7 +136,7 @@ if 1
     if nargin<6 | isempty(theselayers)
         theselayers=latticeZRange(1:end-1)';
     end
-    stopindex = 5163;
+    stopindex = 149;
     nooptim = NaN(1,numTiles);
     for t = theselayers
         %%
@@ -226,6 +226,7 @@ if 1
         end
         for idxt = idxinlayer ; % layer t
             %%
+
             if any(idxt==stopindex)
                 stop=1;
             end
@@ -251,6 +252,11 @@ if 1
                 control(2*Npts+1:end,:,idxt) = control_t_bot12;
                 control(1:2*Npts,:,idxtp1) = control_tp1_top12;
             end
+
+%             if zlim_cntrl(1,149) > 2
+%                 idxt
+%             end
+            
         end
         %%
         anchorinds = idxinlayer(~nooptim(idxinlayer));

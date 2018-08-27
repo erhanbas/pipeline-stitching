@@ -20,16 +20,13 @@ function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 % Copyright: HHMI 2016
 %% MAKE SURE PATHS etc are correct
 % inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
-if nargin==0
-    brain = '2018-06-14';
-    inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
-    pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
-    runfull = true;
-end
-
+runfull = false;
 if nargin==1
+%     brain = '2018-08-01';
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
-    pipelineoutputfolder = sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain)
+elseif nargin<1
+    error('At least pass brain id')
 end
 
 %%
@@ -50,11 +47,11 @@ if piperun
         descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
         matchoutput = descoutput;
     else
-        classifieroutput = fullfile(pipelineoutputfolder,'prob')
+        classifieroutput = fullfile(pipelineoutputfolder,'stage_2_classifier_output')
         descinput = classifieroutput;
-        descoutput = fullfile(pipelineoutputfolder,'desc')
+        descoutput = fullfile(pipelineoutputfolder,'stage_3_descriptor_output')
         matchinput = descoutput;
-        matchoutput = fullfile(pipelineoutputfolder,'match')
+        matchoutput = fullfile(pipelineoutputfolder,'stage_4_point_match_output')
     end
 end
 
@@ -80,7 +77,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull & 0
+if runfull
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -102,7 +99,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if runfull & 0
+if runfull
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -134,7 +131,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if runfull | 0
+if runfull
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -179,7 +176,7 @@ if runfull | 0
 end
 
 %%
-if runfull | 1
+if runfull
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
@@ -190,7 +187,7 @@ if runfull | 1
 end
 
 %%
-if runfull | 1
+if 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
@@ -203,10 +200,10 @@ if runfull | 1
     end
 end
 
-%% 4
+% 4
 load(scopefile,'scopeloc','neighbors','imsize_um','experimentfolder','inputfolder')
 load(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
-%%
+%
 vecfield = vecfield3D;
 
 % checkthese = [1 4 5 7]; % 0 - right - bottom - below

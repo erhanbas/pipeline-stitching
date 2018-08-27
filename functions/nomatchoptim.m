@@ -31,7 +31,7 @@ end
 % same as above for the bottom of the current tile t.
 zlim_3 = zlimdefaults(3);%dims(3)-11;
 zlim_4 = zlimdefaults(4);%dims(3)-1;
-tstats(8) = max(pixstats(:,8));
+tstats(8) = max(pixstats(pixstats(:,8)<150,8)); % added a hard cap at 150 to prevent artifacts due to curation overwrite mistakes
 tstats(6) = min(pixstats(:,6));
 
 corrctrlpnttmp(:,3)= zlim_3;
