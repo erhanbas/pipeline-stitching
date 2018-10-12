@@ -20,7 +20,7 @@ function [des] = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch,ext_d
 if nargin<4
     ext_desc = 'txt';
 end
-myfiles = dir(fullfile(descriptorfolder,scopeloc.relativepaths{1},['*.',ext_desc]));
+myfiles = dir(fullfile(descriptorfolder,scopeloc.relativepaths{10008},['*.',ext_desc]));
 fid = fopen(fullfile(myfiles(1).folder,myfiles(1).name));
 tLines = fgets(fid);
 delimiter = ' '; %or whatever

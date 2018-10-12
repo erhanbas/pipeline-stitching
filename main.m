@@ -20,11 +20,11 @@ function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 % Copyright: HHMI 2016
 %% MAKE SURE PATHS etc are correct
 % inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
-runfull = false;
+runfull = true;
 if nargin==1
-%     brain = '2018-08-01';
+    brain = '2018-08-15';
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
-    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain)
+    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s-vasculature',brain)
 elseif nargin<1
     error('At least pass brain id')
 end
@@ -46,6 +46,12 @@ if piperun
         classifierinput = inputfolder;
         descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
         matchoutput = descoutput;
+    elseif brain=='2018-08-15'
+%         classifieroutput = fullfile(pipelineoutputfolder,'stage_2_classifier_output')
+%         descinput = classifieroutput;
+        descoutput = fullfile(pipelineoutputfolder,'stage_2_descriptor_output')
+        matchinput = descoutput;
+        matchoutput = fullfile(pipelineoutputfolder,'stage_3_point_match_output')
     else
         classifieroutput = fullfile(pipelineoutputfolder,'stage_2_classifier_output')
         descinput = classifieroutput;
@@ -77,7 +83,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull
+if runfull & 0
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -99,7 +105,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if runfull
+if runfull & 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -131,12 +137,12 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if runfull
+if runfull & 0
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     % paramater setting for descrtiptor match
-    scopeacqparams = util.readScopeFile(fileparts(scopeloc.filepath{1}));
+    scopeacqparams = readScopeFile(fileparts(scopeloc.filepath{1}));
     % params.sample = brain;
     params.scopeacqparams = scopeacqparams;
     params.viz = 0;
@@ -177,6 +183,7 @@ end
 
 %%
 if runfull
+    %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
@@ -187,7 +194,7 @@ if runfull
 end
 
 %%
-if 0
+if 1
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
@@ -199,7 +206,7 @@ if 0
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
     end
 end
-
+%%
 % 4
 load(scopefile,'scopeloc','neighbors','imsize_um','experimentfolder','inputfolder')
 load(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
