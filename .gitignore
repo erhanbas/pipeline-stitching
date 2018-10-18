@@ -2,6 +2,9 @@
 *.mat
 *.png
 *.tif
+*.yml
+*.yml_old
+
 Thumbs.png
 videos/
 parfor_progress.txt

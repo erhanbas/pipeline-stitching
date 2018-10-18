@@ -190,7 +190,8 @@ if runfull
     videofile = sprintf('./videos/%s-1stiter-ch1-%s',brain,date)
     % descriptorMatchQuality(regpts,scopeparams,scopeloc,videofile)
     %     createThumb(regpts,scopeparams,scopeloc,videofile)
-    descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
+    % descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
+    descriptorMatchQualityHeatMap_forPaper(regpts,scopeparams{end},scopeloc,videofile)
 end
 
 %%

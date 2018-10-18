@@ -114,6 +114,7 @@ loops = latticeZRange(end)-latticeZRange(1);
 F(loops) = struct('cdata',[],'colormap',[]);
 iter=1;
 %%
+
 magnitude = 0;
 for t = latticeZRange(1:end-1)'%[779,780]%
     %%
@@ -124,6 +125,7 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     h = scopeparams(1).imsize_um(2)*ones(sum(ix),1)*1e3;
     clear theseinds
     theseinds = 1:sum(ix);
+    
     %%
     if t>size(XYZ_t,2); F(iter) = getframe; iter=iter+1; continue; end
     %%
@@ -151,143 +153,72 @@ for t = latticeZRange(1:end-1)'%[779,780]%
             FxU = scatteredInterpolant(XYZ_tp1{t},U/1e3,'linear','nearest');
             FxV = scatteredInterpolant(XYZ_tp1{t},V/1e3,'linear','nearest');
             FxW = scatteredInterpolant(XYZ_tp1{t},W/1e3,'linear','nearest');
-            xyz = scopeloc.loc(ix,:)*1e6;
-            valsU = FxU(xyz);
-            valsV = FxV(xyz);
-            valsW = FxW(xyz);
+            %%
+            xyz_center = scopeloc.loc(ix,:)*1e6 + scopeparams(1).imsize_um*1e3/2;
+            [valsU, valsV, valsW] = deal(zeros(size(xyz_center,1),1));
+            sampling = linspace(-1,1,5);
+            for sh = sampling % avarage of diagonal at the center of a tile
+                xyz = xyz_center + scopeparams(1).imsize_um*1e3.*[1 1 0]/2*sh;
+                valsU = valsU + FxU(xyz);
+                valsV = valsV + FxV(xyz);
+                valsW = valsW + FxW(xyz);
+            end
+            for sh = sampling % avarage of off diagonal at the center of a tile
+                xyz = xyz_center + scopeparams(1).imsize_um*1e3.*[1 -1 0]/2*sh;
+                valsU = valsU + FxU(xyz);
+                valsV = valsV + FxV(xyz);
+                valsW = valsW + FxW(xyz);
+            end
+            valsU = valsU/length(sampling)/2;
+            valsV = valsV/length(sampling)/2;
+            valsW = valsW/length(sampling)/2;
         end
     end
+    
     %% initalize canvas
-    newMap = newColMap(128);
-    hfig = figure(myfig), cla, clf, 
+    newMap = newColMap(12+1);
+    hfig = figure(myfig); 
+    cla, clf;
     hfig.Color = [1 1 1];
     h1=subaxis(1, 1, 1, 'sh', 0.03, 'sv', -0.03, 'padding', .04, 'margin', 0);
     cla, hold on
     disp(['    Layer ' num2str(t) ' of ' num2str(max(scopeloc.gridix(:,3)))]);
-%     caxis([min(ranXYZ(ranXYZ>0)) max(ranXYZ)*.9])
     set(h1, 'XTick', []);
     set(h1, 'YTick', []);
-    %set(h1,'Color',[1 1 1]*.5)
     set(h1,'Ydir','reverse')
     set(h1,'Box','on')
     set(h1, ...
         'XColor'      , [1 1 1], ...
         'YColor'      , [1 1 1], ...
         'LineWidth'   , 10        );
-%     set(h1, ...
-%         'XColor'      , [.3 .3 .3], ...
-%         'YColor'      , [.3 .3 .3], ...
-%         'LineWidth'   , 10        );
-%     text(Rmin(1)+5e5,Rmin(2)+7e5,'Z',...
-%         'FontSize',40,'Color','k','HorizontalAlignment','left')
     view(0,90)
-    %
+    
     c = colorbar('eastoutside','AxisLocation','out');
     c.FontSize = 16;
     c.FontWeight = 'bold';
     c.Label.String = 'Displacement (\mu\it{m})';
     c.Label.FontSize = 20;
     c.Label.FontWeight = 'normal';
-%
     colormap(newMap)
-    
-    for ii=theseinds
-%         rectangle('Position', [x(ii) y(ii) w(ii) h(ii)],'EdgeColor',[1 1 1])
-        if ~emptyslice
-            xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
-            yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
-            patch(xp,yp,valsV(ii),'EdgeColor',[1 1 1]*.5)
-        end
-    end
-    if ~emptyslice
-    scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
-        'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.5)
-    end
-    axis equal
-    caxis([-1 1]*20)
-    export_fig(fullfile('./visualization_figures','Y-displacement.pdf'),'-transparent')
-    %     xlim([Rmin(1) Rmax(1)])
-    %     ylim([Rmin(2) Rmax(2)])
     %%
-    h2=subaxis(2, 1, 2, 'sh', 0.03, 'sv', -0.03, 'padding', 0.04, 'margin', 0);
-    cla, hold on
-    set(h2, 'XTick', []);
-    set(h2, 'YTick', []);
-    set(h2,'Color',[1 1 1]*.5)
-    set(h2,'Ydir','reverse')
-    set(h2,'Box','on')
-    set(h2, ...
-        'XColor'      , [.3 .3 .3], ...
-        'YColor'      , [.3 .3 .3], ...
-        'LineWidth'   , 10        );
-    view(0,90)
-    axis equal
-    colorbar
-    caxis([min(ranXY(ranXY>0)) max(ranXY)*.9])
-    for ii=1:sum(ix)
-        rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
-        if emptyslice
-            continue
+    caxis([-1 1]*20)
+    myMap = containers.Map({'U','V','W'},{'X','Y','Z'});
+    for directions = myMap.keys()
+        inputvals = eval(genvarname(sprintf('vals%s',directions{:}))); %#ok<DEPGENAM,PFCEL>
+        cla,
+        for ii=theseinds
+            % rectangle('Position', [x(ii) y(ii) w(ii) h(ii)],'EdgeColor',[1 1 1])
+            if ~emptyslice
+                xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
+                yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
+                patch(xp,yp,inputvals(ii),'EdgeColor',[1 1 1]*.5)
+            end
         end
-
-        xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
-        yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
-        patch(xp,yp,valsXY(ii))
-        %         if length(vec{t})>=fix(ii)
-        %             vv=vec{t}{fix(ii)};
-        %             if ~isempty(vv)
-        %                 vv=normr(vv(1:2));
-        %                 %                 quiver(x(ii)+w(ii)/2,y(ii)+h(ii)/2,vv(1),vv(2),w(ii)/4,...
-        %                 %                     'LineWidth',2,'Color','m','MaxHeadSize',4)
-        %
-        %                 headWidth = 6;
-        %                 headLength = 3;
-        %                 ah = annotation('arrow',...
-        %                     'headStyle','plain',...
-        %                     'HeadLength',headLength,'HeadWidth',headWidth,...
-        %                     'Color','r');
-        %                 set(ah,'parent',gca);
-        %
-        %                 x0 = x(ii)+w(ii)/2;
-        %                 y0 = y(ii)+h(ii)/2;
-        %                 vx0 = vv(1)*w(ii)/3;
-        %                 vy0 = vv(2)*h(ii)/3;
-        %
-        %                 xn0 = (x0-Rmin(1))/(Rmax(1)-Rmin(1));
-        %                 yn0 = (y0-Rmin(2))/(Rmax(2)-Rmin(2));
-        %                 vnx0 = vx0/(Rmax(1)-Rmin(1));
-        %                 vny0 = vy0/(Rmax(2)-Rmin(2));
-        %                 set(ah,'position',[x(ii)+w(ii)/2,y(ii)+h(ii)/2,vv(1)*w(ii)/3,vv(2)*h(ii)/3]);
-        %                 set(ah,'position',[xn0,yn0,vnx0,vny0]);
-        %             end
-        %         end
+        if ~emptyslice; scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', 'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.5); end
+        axis equal
+        export_fig(fullfile('./visualization_figures',sprintf('%s-displacement.pdf',myMap(directions{:}))),'-transparent')
     end
-    1
-    if ~emptyslice
-        scatter(XYZ_t{t}(:,1),XYZ_t{t}(:,2),6,'filled', ...
-            'MarkerFaceAlpha',.2,'MarkerFaceColor',[1 1 1]*.5)
-    end
-    
-%     text(Rmin(1)+5e5,Rmin(2)+7e5,'Lateral',...
-%         'FontSize',40,'Color','k','HorizontalAlignment','left')
-%     text(Rmin(1)+1e5,Rmax(2)-7e5,num2str(t),...
-%         'FontSize',40,'Color','k','HorizontalAlignment','left')
-    
-    xlim([Rmin(1) Rmax(1)])
-    ylim([Rmin(2) Rmax(2)])
-    drawnow
-    F(iter) = getframe(gcf);
-    iter=iter+1;
 end
-%%
-v = VideoWriter(videofile,'Motion JPEG AVI');
-% v.CompressionRatio = 3;
-v.Quality = 100;
-v.FrameRate=2;
-open(v)
-writeVideo(v,F)
-close(v)
-%%
 end
 
 function h=subaxis(varargin)
