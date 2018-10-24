@@ -22,7 +22,7 @@ function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 % inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
 runfull = true;
 if nargin==1
-    brain = '2018-08-15';
+    brain = '2018-10-01';
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
     pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s-vasculature',brain)
 elseif nargin<1
@@ -83,7 +83,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull & 0
+if runfull
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -105,7 +105,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if runfull & 0
+if runfull
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -137,7 +137,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if runfull & 0
+if runfull
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -182,7 +182,7 @@ if runfull & 0
 end
 
 %%
-if runfull
+if runfull & 0
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
