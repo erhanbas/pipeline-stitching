@@ -38,7 +38,7 @@ fclose(fid);
 [gridix,loc] = deal(cell(1,size(inputfiles,1)));
 if newdash
     parfor_progress(size(inputfiles,1));
-    parfor ifile = 1:size(inputfiles,1)
+    for ifile = 1:size(inputfiles,1)
         parfor_progress;
         scvals = util.scopeparser(inputfiles{ifile});
         gridix{ifile} = [scvals.x scvals.y scvals.z scvals.cut_count];
