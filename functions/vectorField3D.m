@@ -122,7 +122,7 @@ for idxt = 1:numTiles
     mindesc = round(min([layer(:,3) layerp1(:,3)],[],1));
     maxdesc = round(max([layer(:,3) layerp1(:,3)],[],1));
     pixstats(idxt,:) = [idxt  regpts{idxt}.neigs(4) meddesc mindesc maxdesc];
-    pixstats(62,2:end) = pixstats(1162,2:end);
+    % pixstats(62,2:end) = pixstats(1162,2:end);
 end
 
 %%

@@ -37,6 +37,91 @@ if 0
 end
 
 %% estimate the residule
+idx = 8569;
+ctrl = TileEstimator();
+ctrl.Vecfield = vecfield3D;
+ctrl.Scopeloc = scopeloc;
+ctrl.Neigs = neighbors;
+ctrl.pixres = pixres;
+ctrl.Regpts = regpts;
+ctrl.Paireddescriptor = paireddescriptor{1};
+ctrl.Scopeparams = scopeparams{1};
+
+%% mrse affine
+numtile = length(vecfield3D.path);
+[Sest,Sres,Aest,Ares,Cres] = deal(cell(1,numtile));
+for it = 1:numtile
+    idx_center = it;
+    [Sest{it},Sres{it}] = ctrl.estimateStage(idx_center);
+    [Aest{it},Ares{it}] = ctrl.estimateAffine(idx_center);
+    Cres{it} = ctrl.estimateResidual4ctrl(idx_center);
+end
+
+%%
+[S_mse,A_mse,C_mse] = deal(nan(1,numtile));
+mse_desc = nan(1,numtile);
+for it = 1:numtile
+    if ~isnan(Aest{it}); S_mse(it) = mean(sqrt(sum(Sres{it}.^2,2))); end
+    if ~isnan(Aest{it}); A_mse(it) = mean(sqrt(sum(Ares{it}.^2,2))); end
+    if ~isnan(Aest{it}); C_mse(it) = mean(sqrt(sum(Cres{it}.^2,2)),'omitnan'); end
+end
+%%
+disp(sprintf('MeanSE of residuals for %d tiles: %s %s %s',...
+    sum(isfinite(A_mse)),...
+    'based on stage |', 'based on affine |', 'based on ctrl'))
+
+disp(sprintf('MeanSE of residuals for %d: %f | %f | %f',...
+    sum(isfinite(A_mse)),...
+    mean(S_mse,'omitnan'), mean(A_mse(isfinite(A_mse)),'omitnan'), mean(C_mse(isfinite(A_mse)),'omitnan')))
+
+disp(sprintf('MedianSE of residuals for %d: %f | %f | %f',...
+    sum(isfinite(A_mse)),...
+    median(S_mse,'omitnan'), median(A_mse,'omitnan'), median(C_mse,'omitnan')))
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A_mse_sorted = sort(A_mse(isfinite(A_mse)));
+C_mse_sorted = sort(C_mse(isfinite(C_mse)));
+
+
+
+%%
+ctrl.estimateResidual4ctrl(idx_center)
+
+
+
+%%
+[accumulator_stage,accumulator_descriptor] = ctrl.getDifferences(idx);
+
+%%
+idx_center = 8569;
+[Aest_idx,res] = ctrl.estimateAffine(idx_center);
+mean(sqrt(sum(res.^2,2)))
+
+idx_target = neighbors(idx_center,end);
+[Aest_idy,res_idy] = ctrl.estimateAffine(idx_target);
+
+%
+tile_descs_center = regpts{idx_center}.X;
+tile_descs_target = regpts{idx_center}.Y;
+
+x1 = tile_descs_center * Aest_idx + ctrl.Scopeloc.loc(idx_center,:)*1e3;
+x2 = tile_descs_target * Aest_idy + ctrl.Scopeloc.loc(idx_target,:)*1e3;
+
+x1-x2
+
+%%
+figure, 
+myplot3(tile_descs_center,'o')
+hold on
+myplot3(tile_descs_target,'*')
+
+%%
+figure, 
+myplot3(x1,'o')
+hold on
+myplot3(x2,'*')
+
+%% estimate the residule
 idx_center = 8569;
 idx_target = neighbors(idx_center,end);
 
@@ -108,8 +193,11 @@ err_stage_translation_um = sqrt(sum((res_1-mean(res_1)).^2,2)); % in um
 err_aff_um = (norm(res_2)); % in um
 % correct the shift/translation only based on match
 err_aff_translation_um = sqrt(sum((res_2-mean(res_2)).^2,2)); % in um
+%%
+mean(err_stage_translation_um)
+mean(err_aff_translation_um)
 
-mean(sqrt(sum(res_3.^2,2)),'omitnan')
+% mean(sqrt(sum(res_3.^2,2)),'omitnan')
 %%
 
 err_aff_um_1 = norm(res_2(:,1:3));

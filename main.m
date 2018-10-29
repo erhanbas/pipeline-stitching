@@ -24,7 +24,7 @@ runfull = true;
 if nargin==1
     brain = '2018-10-01';
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
-    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s-vasculature',brain)
+    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain)
 elseif nargin<1
     error('At least pass brain id')
 end
@@ -83,7 +83,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull
+if runfull & 0
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -105,7 +105,7 @@ end
 
 %%
 % 1: LOAD MATCHED FEATS
-if runfull
+if runfull & 0
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder');
     directions = 'Z';
     checkversion = 1; % 1: loads the version with "checkversion" extension and overwrites existing match if there are more matched points
@@ -137,7 +137,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if runfull
+if runfull & 0
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -190,8 +190,8 @@ if runfull & 0
     videofile = sprintf('./videos/%s-1stiter-ch1-%s',brain,date)
     % descriptorMatchQuality(regpts,scopeparams,scopeloc,videofile)
     %     createThumb(regpts,scopeparams,scopeloc,videofile)
-    % descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
-    descriptorMatchQualityHeatMap_forPaper(regpts,scopeparams{end},scopeloc,videofile)
+    descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
+%     descriptorMatchQualityHeatMap_forPaper(regpts,scopeparams{end},scopeloc,videofile)
 end
 
 %%
@@ -207,7 +207,7 @@ if 1
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
     end
 end
-%%
+%
 % 4
 load(scopefile,'scopeloc','neighbors','imsize_um','experimentfolder','inputfolder')
 load(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
