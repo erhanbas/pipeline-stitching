@@ -47,6 +47,16 @@ ctrl.Regpts = regpts;
 ctrl.Paireddescriptor = paireddescriptor{1};
 ctrl.Scopeparams = scopeparams{1};
 
+%% get mask/inds for interior. This is to prevent outliers due to gelatin 
+[interior] = valid_inds(scopeloc);
+
+figure(11), cla
+myplot3(round(scopeloc.gridix(:,1:3)),'o')
+hold on
+myplot3(round(scopeloc.gridix(interior,1:3)),'r.')
+
+
+
 %% mrse affine
 numtile = length(vecfield3D.path);
 [Sest,Sres,Aest,Ares,Cres] = deal(cell(1,numtile));
@@ -79,10 +89,30 @@ disp(sprintf('MedianSE of residuals for %d: %f | %f | %f',...
     median(S_mse,'omitnan'), median(A_mse,'omitnan'), median(C_mse,'omitnan')))
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-A_mse_sorted = sort(A_mse(isfinite(A_mse)));
-C_mse_sorted = sort(C_mse(isfinite(C_mse)));
 
+tt = scopeloc.gridix(these_inds,1:3);
+% close all
+%%
+% get indicies of 
 
+figure, 
+imshow(sum(tileImage,3),[])
+figure, 
+imshow(sum(out,3),[])
+%%
+[A_mse_sorted,A_mse_inds] = sort(A_mse(isfinite(A_mse)),'descend');
+[C_mse_sorted,C_mse_inds] = sort(C_mse(isfinite(C_mse)),'descend');
+
+bb = find(A_mse<C_mse);
+aa = find(A_mse>C_mse);
+cc = find(C_mse>30);
+
+%
+figure(13), cla
+myplot3(round(scopeloc.loc(bb,:)*1e3),'o')
+hold on
+myplot3(round(scopeloc.loc(aa,:)*1e3),'r.')
+myplot3(round(scopeloc.loc(cc,:)*1e3),'gs')
 
 %%
 ctrl.estimateResidual4ctrl(idx_center)
