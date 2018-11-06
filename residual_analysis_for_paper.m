@@ -35,7 +35,33 @@ if 0
     [scopeparams,scopeparams_,paireddescriptor_,curvemodel_] = homographyPerTile6Neighbor(...
         params,neighbors,scopeloc,paireddescriptor,R,curvemodel);
 end
+%% compile descriptor matches
 
+% tot_num_tiles = length(scopeloc.filepath);
+% pairGraph = cell(tot_num_tiles,tot_num_tiles);
+% %%
+% descset = paireddescriptor{3};
+% for idx_tile = 1: tot_num_tiles
+%     neigs = neighbors(idx_tile,:); %[id -x -y +x +y -z +z]
+%     % onx
+%     ix = idx_tile;
+%     X = descset{ix}.onx.X;
+%     Y = descset{ix}.onx.Y;
+%     
+%     iy = neigs(2);
+%     X = descset{iy}.onx.X;
+%     Y = descset{iy}.onx.Y;
+% 
+%     iy = neigs(5);
+%     pairGraph{ix,iy}.ony = paireddescriptor{1}{ix}.ony;
+%     regpts{ix}
+%     pairGraph{ix,iy}.onz = paireddescriptor{1}{ix}.onz;
+% 
+%     descpairs
+%     
+%     
+%     
+% end
 %% estimate the residule
 idx = 8569;
 ctrl = TileEstimator();
@@ -44,28 +70,24 @@ ctrl.Scopeloc = scopeloc;
 ctrl.Neigs = neighbors;
 ctrl.pixres = pixres;
 ctrl.Regpts = regpts;
-ctrl.Paireddescriptor = paireddescriptor{1};
-ctrl.Scopeparams = scopeparams{1};
+ctrl.Paireddescriptor = paireddescriptor{end};
+ctrl.Scopeparams = scopeparams{end};
 
 %% get mask/inds for interior. This is to prevent outliers due to gelatin 
-[interior] = valid_inds(scopeloc);
-
-figure(11), cla
-myplot3(round(scopeloc.gridix(:,1:3)),'o')
-hold on
-myplot3(round(scopeloc.gridix(interior,1:3)),'r.')
-
-
+[interior] = valid_inds(scopeloc,1);
 
 %% mrse affine
+% stats: mean([xyz, x+1, x-1, y+1, y-1, z+1, z-1])
 numtile = length(vecfield3D.path);
-[Sest,Sres,Aest,Ares,Cres] = deal(cell(1,numtile));
-for it = 1:numtile
-    idx_center = it;
-    [Sest{it},Sres{it}] = ctrl.estimateStage(idx_center);
-    [Aest{it},Ares{it}] = ctrl.estimateAffine(idx_center);
-    Cres{it} = ctrl.estimateResidual4ctrl(idx_center);
+[Sest,Sres,Aest,Ares,Cres,residual_onx,residual_ony,residual_onz,stats] = deal(cell(1,numtile));
+tic
+parfor it = 1:numtile
+    [Sest{it},Sres{it}] = ctrl.estimateStage(it);
+    [Aest{it},Ares{it}] = ctrl.estimateAffine(it);
+    [Cres{it},residual_onx{it}, residual_ony{it}, residual_onz{it}, stats{it}] = ctrl.estimateResidual4ctrl(it);
 end
+toc
+% save workspace.mat -v7.3
 
 %%
 [S_mse,A_mse,C_mse] = deal(nan(1,numtile));
@@ -75,6 +97,86 @@ for it = 1:numtile
     if ~isnan(Aest{it}); A_mse(it) = mean(sqrt(sum(Ares{it}.^2,2))); end
     if ~isnan(Aest{it}); C_mse(it) = mean(sqrt(sum(Cres{it}.^2,2)),'omitnan'); end
 end
+
+mean_res = nan(numtile,4);
+for it = 1:numtile
+    mean_res(it,:) = [ctrl.meanSqrt(Cres{it}),ctrl.meanSqrt(residual_onx{it}) ctrl.meanSqrt(residual_ony{it}) ctrl.meanSqrt(residual_onz{it})];
+end
+
+%% viz
+finterior = find(interior);
+[aa,bb] = max(mean_res(finterior))
+finterior(bb)
+figure(11), cla
+myplot3(round(scopeloc.gridix(:,1:3)),'o')
+hold on
+myplot3(round(scopeloc.gridix(interior,1:3)),'r.')
+myplot3(round(scopeloc.gridix(finterior(bb),1:3)),'ks')
+%% histograms
+% close all
+clc
+figure(123), clf
+
+ax = gca;
+h_ctrl = histogram(C_mse(finterior));
+hold on
+h_aff = histogram(A_mse(finterior));
+h_st = histogram(S_mse(finterior));
+
+
+C_st = [mean(C_mse(finterior),'omitnan') std(C_mse(finterior),'omitnan')];
+A_st = [mean(A_mse(finterior),'omitnan') std(A_mse(finterior),'omitnan')];
+S_st = [mean(S_mse(finterior),'omitnan') std(S_mse(finterior),'omitnan')];
+leg1 = sprintf('Control points: %1.3f \\pm %1.3f',C_st(1),C_st(2));
+leg2 = sprintf('Affine: %1.3f \\pm %1.3f',A_st(1),A_st(2));
+leg3 = sprintf('Stage: %1.3f \\pm %1.3f',S_st(1),S_st(2));
+
+leg = legend(leg1,leg2,leg3);
+% legend('test \pm')
+leg.FontSize = 32;
+h_ctrl.BinWidth = .2;
+h_aff.BinWidth = .2;
+h_st.BinWidth = .2;
+xlim([0 20])
+
+title('Residual out of 11657 tiles', 'FontSize', 30)
+xlabel('Residual magnitude in \mum', 'FontSize', 30)
+ax.YAxis.FontSize = 24;
+ax.XAxis.FontSize = 24;
+export_fig(fullfile('./visualization_figures','residual_histogram.png'),'-transparent')
+%% box plot
+len = length(finterior);
+C_fint = C_mse(finterior);
+S_fint = S_mse(finterior);
+A_fint = A_mse(finterior);
+X_fint = [C_fint,A_fint,S_fint];
+
+Origin = [repmat({'Ctrl'},len,1);repmat({'Affine'},len,1);repmat({'Stage'},len,1)];
+leg1 = sprintf('%1.3f \\pm %1.3f',C_st(1),C_st(2));
+leg2 = sprintf('%1.3f \\pm %1.3f',A_st(1),A_st(2));
+leg3 = sprintf('%1.3f \\pm %1.3f',S_st(1),S_st(2));
+
+figure(34), 
+clf,
+ax = cla;
+hold on
+boxplot(X_fint,Origin)
+text(1-.1,median(C_fint,'omitnan'), leg1,'FontSize',12,'FontWeight','bold')
+text(2-.1,median(A_fint,'omitnan'), leg2,'FontSize',12,'FontWeight','bold')
+text(3-.1,median(S_fint,'omitnan'), leg3,'FontSize',12,'FontWeight','bold')
+
+ylim([-1 30])
+ylabel('Residual in \mum')
+
+ax.YAxis.FontSize = 34;
+ax.XAxis.FontSize = 44;
+set(ax,'Ytick',0:5:32)
+export_fig(fullfile('./visualization_figures','residual_boxplot.png'),'-transparent')
+
+%%
+% figure, 
+% hist(mean_res(finterior),100)
+% figure, hist(mean_res(finterior),100)
 %%
 disp(sprintf('MeanSE of residuals for %d tiles: %s %s %s',...
     sum(isfinite(A_mse)),...

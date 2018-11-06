@@ -10,7 +10,7 @@ classdef TileEstimator
     end
     methods
         function [Aest,residual] = estimateStage(obj,idx)
-            % t1 + A1*X1 = t2 + A2*X2, where 
+            % t1 + A1*X1 = t2 + A2*X2, where
             % t : stage coordinate
             % A: affine of a tile
             % X1: descriptors in a tile
@@ -26,7 +26,7 @@ classdef TileEstimator
             Aest = A;
         end
         function [Aest,residual] = estimateAffine(obj,idx)
-            % t1 + A1*X1 = t2 + A2*X2, where 
+            % t1 + A1*X1 = t2 + A2*X2, where
             % t : stage coordinate
             % A: affine of a tile
             % X1: descriptors in a tile
@@ -41,31 +41,162 @@ classdef TileEstimator
             residual = ( stage_dif + desc_dif * A);
             Aest = A;
         end
-        function [residual] = estimateResidual4ctrl(obj,idx_center,idx_target)
+        
+        function [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onx(obj,ix,iy)
+            xyz_center = obj.gridLocations(ix);
+            control_points_center = obj.Vecfield.control(:,:,ix)/1e3; % in um
+            xyz_target = obj.gridLocations(iy);
+            control_points_target = obj.Vecfield.control(:,:,iy)/1e3; % in um
+            tile_descs_center = obj.Paireddescriptor{ix}.onx.X;
+            tile_descs_target = obj.Paireddescriptor{ix}.onx.Y; % this is on ix not iy !!
+        end
+        
+        function [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_ony(obj,ix,iy)
+            xyz_center = obj.gridLocations(ix);
+            control_points_center = obj.Vecfield.control(:,:,ix)/1e3; % in um
+            xyz_target = obj.gridLocations(iy);
+            control_points_target = obj.Vecfield.control(:,:,iy)/1e3; % in um
+            tile_descs_center = obj.Paireddescriptor{ix}.ony.X;
+            tile_descs_target = obj.Paireddescriptor{ix}.ony.Y; % this is on ix not iy !!
+        end
+        
+        
+        function [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onz(obj,ix,iy)
+            xyz_center = obj.gridLocations(ix);
+            control_points_center = obj.Vecfield.control(:,:,ix)/1e3; % in um
+            xyz_target = obj.gridLocations(iy);
+            control_points_target = obj.Vecfield.control(:,:,iy)/1e3; % in um
+            tile_descs_center = obj.Regpts{ix}.X;
+            tile_descs_target = obj.Regpts{ix}.Y; % this is on ix not iy !!
+        end
+        function X = finitefilter(obj,X)
+            X = X(all(isfinite(X),2),:);
+        end
+        function mX = meanSqrt(obj,X)
+            mX = mean(sqrt(sum(X.^2,2)),'omitnan');
+        end
+        
+        function [residual,residual_onx, residual_ony, residual_onz, stats] = estimateResidual4ctrl(obj,idx_center,idx_target)
+            
+            %% estimates residual error for matched descriptors
             % gets a tile, and its adjacent tiles and estimates residual
-            if nargin < 3
-                idx_target = obj.Neigs(idx_center,end);
+            if nargin == 3 % estimate only for target
+                if isnan(idx_target); residual = nan;return;end
+                % on z
+                xyz_center = obj.gridLocations(idx_center);
+                control_points_center = obj.Vecfield.control(:,:,idx_center)/1e3; % in um
+                
+                xyz_target = obj.gridLocations(idx_target);
+                control_points_target = obj.Vecfield.control(:,:,idx_target)/1e3; % in um
+                
+                tile_descs_center = obj.Regpts{idx_center}.X;
+                tile_descs_target = obj.Regpts{idx_center}.Y;
+                
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+                return
             end
-            if isnan(idx_target); residual = nan;return;end
+            
             neigs = obj.Neigs(idx_center,:); %[id -x -y +x +y -z +z]
-            xyz_center = obj.gridLocations(idx_center);
-            xyz_target = obj.gridLocations(idx_target);
-            control_points_center = obj.Vecfield.control(:,:,idx_center)/1e3; % in um
-            control_points_target = obj.Vecfield.control(:,:,idx_target)/1e3; % in um
-            tile_descs_center = obj.Regpts{idx_center}.X;
-            tile_descs_target = obj.Regpts{idx_center}.Y;
-            tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
-            tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
-            residual = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
-%             mean(sqrt(sum(res.^2,2)),'omitnan')
-
-%             for ineigs = 2:legth(neigs)
-%                 xyz_center
-%                 
-%             end
+            [residual_onxp1,residual_onxm1,residual_onyp1,residual_onym1,residual_onzp1,residual_onzm1] = deal([]);
+            % on +x
+            ix = idx_center;
+            iy = neigs(4);
+            if all(isfinite([ix,iy]))
+                [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onx(obj,ix,iy);
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual_onxp1 = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+            end
+            
+            % on -x
+            ix = neigs(2);
+            iy = neigs(1);
+            if all(isfinite([ix,iy]))
+                [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onx(obj,ix,iy);
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual_onxm1 = -(tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+            end
+            % on +y
+            ix = idx_center;
+            iy = neigs(5);
+            if all(isfinite([ix,iy]))
+                [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_ony(obj,ix,iy);
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual_onyp1 = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+            end
+            
+            % on -y
+            ix = neigs(3);
+            iy = neigs(1);
+            if all(isfinite([ix,iy]))
+                [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_ony(obj,ix,iy);
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual_onym1 = -(tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+            end
+            
+            % on +z
+            ix = neigs(1);
+            iy = neigs(7);
+            if all(isfinite([ix,iy]))
+                [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onz(obj,ix,iy);
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual_onzp1 = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+            end
+            
+            % on -z
+            ix = neigs(6);
+            iy = neigs(1);
+            if all(isfinite([ix,iy]))
+                [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onz(obj,ix,iy);
+                tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
+                tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
+                residual_onzm1 = -(tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+            end
+            
+            %             residual_list.onxp1 = residual_onxp1;
+            %             residual_list.onxm1 = residual_onxm1;
+            %             residual_list.onyp1 = residual_onyp1;
+            %             residual_list.onym1 = residual_onym1;
+            %             residual_list.onzp1 = residual_onzp1;
+            %             residual_list.onzm1 = residual_onzm1;
+            %[id -x -y +x +y -z +z]
+            %%
+            residual = [
+                residual_onxp1;residual_onxm1;
+                residual_onyp1;residual_onym1;
+                residual_onzp1;residual_onzm1;
+                ];
+            residual = obj.finitefilter(residual);
+            
+            residual = obj.finitefilter(residual);
+            residual_onxp1 = obj.finitefilter(residual_onxp1);
+            residual_onxm1 = obj.finitefilter(residual_onxm1);
+            residual_onyp1 = obj.finitefilter(residual_onyp1);
+            residual_onym1 = obj.finitefilter(residual_onym1);
+            residual_onzp1 = obj.finitefilter(residual_onzp1);
+            residual_onzm1 = obj.finitefilter(residual_onzm1);
+            
+            residual_onx = [residual_onxp1;residual_onxm1];
+            residual_ony = [residual_onyp1;residual_onym1];
+            residual_onz = [residual_onzp1;residual_onzm1];
+            residual_onx = residual_onx(all(isfinite(residual_onx),2),:);
+            residual_ony = residual_ony(all(isfinite(residual_ony),2),:);
+            residual_onz = residual_onz(all(isfinite(residual_onz),2),:);
+            
+            stats = [obj.meanSqrt(residual) obj.meanSqrt(residual_onxp1) obj.meanSqrt(residual_onxm1) obj.meanSqrt(residual_onyp1) obj.meanSqrt(residual_onym1) obj.meanSqrt(residual_onzp1) obj.meanSqrt(residual_onzm1)];
             
             
         end
+        
+        
+        
+        
         %% UTILITY functions
         function um_t = interpolatedInstance(obj,xyz,um,xyz_t)
             FxU = scatteredInterpolant(xyz,um(:,1),'linear','none');
@@ -97,11 +228,11 @@ classdef TileEstimator
             [stage_dif,des_dif] = getDifferences_onz(obj,idx_center,idx_target);
             accumulator_stage{1} = -stage_dif; % -z direction
             accumulator_descriptor{1} = -des_dif; % -z direction
-
+            
             %% tile match with below
             idx_center = idx;
             idx_target = neigs(end);
-
+            
             [stage_dif,des_dif] = obj.getDifferences_onz(idx_center,idx_target);
             accumulator_stage{end+1} = stage_dif; % +z
             accumulator_descriptor{end+1} = des_dif; % +z
@@ -114,7 +245,7 @@ classdef TileEstimator
             [stage_dif,des_dif] = obj.getDifferences_onx(idx_center,idx_target);
             accumulator_stage{end+1} = -stage_dif; % -x direction
             accumulator_descriptor{end+1} = -des_dif; % -x direction
-
+            
             %% tile match with right
             idx_center = idx;
             idx_target = neigs(4);
@@ -128,7 +259,7 @@ classdef TileEstimator
             [stage_dif,des_dif] = obj.getDifferences_ony(idx_center,idx_target);
             accumulator_stage{end+1} = -stage_dif; % -y direction
             accumulator_descriptor{end+1} = -des_dif; % -y direction
-
+            
             %% tile match with top
             idx_center = idx;
             idx_target = neigs(5);
@@ -155,7 +286,7 @@ classdef TileEstimator
             tile_descs_center = obj.Regpts{idx_center}.X;
             tile_descs_target = obj.Regpts{idx_center}.Y;
             des_dif = tile_descs_center - tile_descs_target;
-
+            
             tile_loc_um_center = obj.Scopeloc.loc(idx_center,:)*1e3; %in um
             tile_loc_um_target = obj.Scopeloc.loc(idx_target,:)*1e3; %in um
             stage_dif = tile_loc_um_center - tile_loc_um_target;

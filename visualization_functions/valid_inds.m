@@ -1,5 +1,8 @@
-function interior = valid_inds(scopeloc)
-
+function interior = valid_inds(scopeloc,num_dilate)
+%%
+if nargin<2
+    num_dilate=0;
+end
 grids = scopeloc.gridix(:,1:3);
 grids = grids-min(grids)+1;
 dims = range(grids)+1;
@@ -9,6 +12,10 @@ tileImage = zeros(dims);
 inds = sub2ind(dims,grids(:,2),grids(:,1),grids(:,3));
 tileImage(inds) = 1;
 out = bwperim(tileImage);
+for it = 1:num_dilate
+    out = imdilate(out,strel(ones(3,3,3))) .* tileImage;
+end
+
 out_inds = find(out);
 M = containers.Map(inds,1:size(grids,1));
 
