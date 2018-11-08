@@ -30,7 +30,7 @@ X_ = X_(validinds,:);
 Y_ = Y_(validinds,:);
 y = y(validinds,:);
 
-x = X_(:,setdiff([1 2],iadj));
+x = Y_(:,setdiff([1 2],iadj));
 dimcent = dims(setdiff([1:2],iadj))/2; % center of image along curvature axis
 % polynomial coeeficients (p3-p2(y-p1)^2):
 % p(1) : imaging center ~ dims/2 +/- %10
