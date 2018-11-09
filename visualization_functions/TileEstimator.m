@@ -7,6 +7,7 @@ classdef TileEstimator
         pixres = [1 1 1]
         Paireddescriptor
         Scopeparams
+        thr = [10 10 25]
     end
     methods
         function [Aest,residual] = estimateStage(obj,idx)
@@ -73,7 +74,8 @@ classdef TileEstimator
             X = X(all(isfinite(X),2),:);
         end
         function mX = meanSqrt(obj,X)
-            mX = mean(sqrt(sum(X.^2,2)),'omitnan');
+            %mX = mean(sqrt(sum(X.^2,2)),'omitnan');
+            mX = median(sqrt(sum(X.^2,2)),'omitnan');
         end
         
         function [residual,residual_onx, residual_ony, residual_onz, stats] = estimateResidual4ctrl(obj,idx_center,idx_target)
@@ -97,13 +99,13 @@ classdef TileEstimator
                 residual = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
                 return
             end
-            
+            thr = obj.thr;
             neigs = obj.Neigs(idx_center,:); %[id -x -y +x +y -z +z]
             [residual_onxp1,residual_onxm1,residual_onyp1,residual_onym1,residual_onzp1,residual_onzm1] = deal([]);
             % on +x
             ix = idx_center;
             iy = neigs(4);
-            if all(isfinite([ix,iy]))
+            if all(isfinite([ix,iy])) & obj.Paireddescriptor{ix}.onx.valid & size(obj.Paireddescriptor{ix}.onx.X,1) > thr(1)
                 [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onx(obj,ix,iy);
                 tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
                 tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
@@ -113,7 +115,7 @@ classdef TileEstimator
             % on -x
             ix = neigs(2);
             iy = neigs(1);
-            if all(isfinite([ix,iy]))
+            if all(isfinite([ix,iy])) & obj.Paireddescriptor{ix}.onx.valid & size(obj.Paireddescriptor{ix}.onx.X,1) > thr(1)
                 [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onx(obj,ix,iy);
                 tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
                 tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
@@ -122,7 +124,7 @@ classdef TileEstimator
             % on +y
             ix = idx_center;
             iy = neigs(5);
-            if all(isfinite([ix,iy]))
+            if all(isfinite([ix,iy])) & obj.Paireddescriptor{ix}.ony.valid & size(obj.Paireddescriptor{ix}.ony.X,1) > thr(2)
                 [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_ony(obj,ix,iy);
                 tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
                 tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
@@ -132,7 +134,7 @@ classdef TileEstimator
             % on -y
             ix = neigs(3);
             iy = neigs(1);
-            if all(isfinite([ix,iy]))
+            if all(isfinite([ix,iy])) & obj.Paireddescriptor{ix}.ony.valid & size(obj.Paireddescriptor{ix}.onx.X,1) > thr(2)
                 [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_ony(obj,ix,iy);
                 tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
                 tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
@@ -142,17 +144,22 @@ classdef TileEstimator
             % on +z
             ix = neigs(1);
             iy = neigs(7);
-            if all(isfinite([ix,iy]))
+            if all(isfinite([ix,iy])) & size(obj.Regpts{ix}.X,1) > thr(3)
                 [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onz(obj,ix,iy);
                 tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
                 tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);
                 residual_onzp1 = (tile_descs_center_ctrl_um - tile_descs_target_ctrl_um);
+                %%
+                %mean(residual_onzp1,'omitnan')
+                %obj.meanSqrt(residual_onzp1)
+                %mean(residual_onzm1,'omitnan')
+                %obj.meanSqrt(residual_onzm1)
             end
             
             % on -z
             ix = neigs(6);
             iy = neigs(1);
-            if all(isfinite([ix,iy]))
+            if all(isfinite([ix,iy])) & size(obj.Regpts{ix}.X,1) > thr(3)
                 [xyz_center,xyz_target,control_points_center,control_points_target,tile_descs_center,tile_descs_target] = getPoints_onz(obj,ix,iy);
                 tile_descs_center_ctrl_um = obj.interpolatedInstance(xyz_center,control_points_center,tile_descs_center);
                 tile_descs_target_ctrl_um = obj.interpolatedInstance(xyz_target,control_points_target,tile_descs_target);

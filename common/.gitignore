@@ -2,4 +2,5 @@
 *.tif
 *.asv
 /data/*
+*.m~
 

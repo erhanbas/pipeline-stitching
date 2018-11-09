@@ -2,7 +2,7 @@ function [X_,Y_,out,valid] =  fcestimate(X_,Y_,iadj,params)
 %FCESTIMATE Summary of this function goes here
 %   Detailed explanation goes here
 valid = 0;
-viz = params.viz;
+viz = 1| params.viz;
 % model = @(p,y) p(3) - p(2).*((y-p(1)).^2); % FC model
 model = params.model;
 optimopts = params.optimopts;
@@ -18,7 +18,7 @@ y = dispvec(:,iadj);
 % (roughly) constant for non curvature directions
 if 1
     validinds = 1:length(y);
-elseif length(normvcomp)>20 & 0
+elseif length(y)>20 
     vcomp = dispvec(:,setdiff(1:3,iadj));
     medvcomp = median(vcomp);
     normvcomp = vcomp-ones(size(vcomp,1),1)*medvcomp;
@@ -30,7 +30,7 @@ X_ = X_(validinds,:);
 Y_ = Y_(validinds,:);
 y = y(validinds,:);
 
-x = Y_(:,setdiff([1 2],iadj));
+x = X_(:,setdiff([1 2],iadj));
 dimcent = dims(setdiff([1:2],iadj))/2; % center of image along curvature axis
 % polynomial coeeficients (p3-p2(y-p1)^2):
 % p(1) : imaging center ~ dims/2 +/- %10
@@ -107,16 +107,22 @@ end
 
 %%
 if viz
+    %%
     if iadj==1
+        % range
+        ran = [min(dispvec);max(dispvec)];xl = ran(:,iadj);xl=xl(:)';
+        yl = [0 dims(setdiff([1 2],iadj))];
+        xlim(xl), ylim(yl)
+
         figure(304),
-        subplot(2,1,iadj)
+        subplot(2,2,[1 3])
         cla
         plot(y,x,'+')
         hold on
         plot(y(outliers),x(outliers),'ro')
         plot(y_range,x_range,'g-')
         plot(feval(model,out,x),x,'go')
-        daspect([1 100 1])
+        daspect([1 50 1])
         
     elseif iadj==2
         figure(304),

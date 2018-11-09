@@ -2,6 +2,9 @@ function [xshift,yshift] = shiftxy(xy,centxy,beta,order,dims)
 if nargin<4
     order = 1;
 end
+!!!!!!!!!!!!!
+@@ TODO: is centxy always positive?? maybe need abs() here?
+!!!!!!!!!!!!!
 
 if centxy(2)<=eps % no curvature
     weightx = ((xy(:,1)-dims(1)/2).^order);

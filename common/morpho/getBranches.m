@@ -17,7 +17,7 @@ function [branch,list] = getBranches(G,rootnode)
 % Copyright: HHMI 2015
 
 % force lower triangle
-G = G.*tril(G,-1);
+% G_ = G.*tril(G,-1);
 
 % critical nodes
 if nargin<2

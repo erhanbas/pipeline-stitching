@@ -112,7 +112,7 @@ loops = latticeZRange(end)-latticeZRange(1);
 F(loops) = struct('cdata',[],'colormap',[]);
 iter=1;
 %%
-for t = latticeZRange(1:end-1)'%[779,780]%
+for t = 1478%latticeZRange(1:end-1)'%[779,780]%
     %%
     ix = (scopeloc.gridix(:,3)'==t);
     x = scopeloc.loc(ix,1)*1e6-scopeparams(1).imsize_um(1)*1e3;
@@ -168,7 +168,7 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     colormap(newMap)
     
     for ii=theseinds
-        rectangle('Position', [x(ii) y(ii) w(ii) h(ii)])
+        rectangle('Position', [x(ii) y(ii) w(ii) h(ii)],'EdgeColor','r')
         if ~emptyslice
             xp = [x(ii) x(ii) x(ii)+w(ii) x(ii)+w(ii)];
             yp = [y(ii) y(ii)+h(ii) y(ii)+h(ii) y(ii)];
@@ -244,8 +244,8 @@ for t = latticeZRange(1:end-1)'%[779,780]%
     
 %     text(Rmin(1)+5e5,Rmin(2)+7e5,'Lateral',...
 %         'FontSize',40,'Color','k','HorizontalAlignment','left')
-%     text(Rmin(1)+1e5,Rmax(2)-7e5,num2str(t),...
-%         'FontSize',40,'Color','k','HorizontalAlignment','left')
+    text(Rmin(1)+1e5,Rmax(2)-7e5,num2str(t),...
+        'FontSize',40,'Color','k','HorizontalAlignment','left')
     
     xlim([Rmin(1) Rmax(1)])
     ylim([Rmin(2) Rmax(2)])

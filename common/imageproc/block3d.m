@@ -1,4 +1,4 @@
-function [outputArgs] = block3d(I,blockSize,fullh,parallel,blockfun, blockfunarg)
+function varargout = block3d(I,blockSize,fullh,parallel,blockfun, blockfunarg)
 %BLOCK3D Summary of this function goes here
 %
 % [OUTPUTARGS] = BLOCK3D(INPUTARGS) runs pixelwise operations on
@@ -92,29 +92,36 @@ else
     end
 end
 %%
-if iscell(OUT_{1})
-    numOut = length(OUT_{1});
-    [outputArgs{numOut}] = deal(zeros(dimsori));
+numOut = nargout;
+output = cell(1,numOut);
+if iscell(OUT_{1}) % multiple output
+    for iout = 1:numOut
+        output{iout} = zeros(dimsori,class(OUT_{iout}));
+    end
 else
     numOut = 1;
     if islogical(I{1})
-        [outputArgs] = deal(false(dimsori));
+        [output] = deal(false(dimsori));
     else
-        [outputArgs] = deal(zeros(dimsori,class(I{1})));
+        [output] = deal(zeros(dimsori,class(OUT_{1})));
     end
 end
+
 % stitch back to original size
 for i=1:numblocks
     if numOut>1
         for j=1:numOut
-            outputArgs{j}(bbox(i,1):bbox(i,2)-2*h,...
+            output{j}(bbox(i,1):bbox(i,2)-2*h,...
                 bbox(i,3):bbox(i,4)-2*h,...
                 bbox(i,5):bbox(i,6)-2*h) = OUT_{i}{j}(h+1:end-h,h+1:end-h,h+1:end-h);
         end
     else
-        outputArgs(bbox(i,1):bbox(i,2)-2*h,...
+        output(bbox(i,1):bbox(i,2)-2*h,...
             bbox(i,3):bbox(i,4)-2*h,...
             bbox(i,5):bbox(i,6)-2*h) = OUT_{i}(h+1:end-h,h+1:end-h,h+1:end-h);
     end
+end
+if ~iscell(output)
+    varargout{1} = output;
 end
 end

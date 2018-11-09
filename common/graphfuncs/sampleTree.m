@@ -44,7 +44,7 @@ for ii=1:length(L)
             case 'uni'
                 p2 = sum((xyz(1:end-1,:)-xyz(2:end,:)).^2,2);
             case 'curv'
-                p2 = (xyz(1:end-1,:)-xyz(2:end,:)).^2*[1;1;5];
+                p2 = (xyz(1:end-1,:)-xyz(2:end,:)).^2*[1;1;50];
             otherwise
         end
         dists = sqrt(p2); % resolution is 0.33 um per pixel => multiply with 3 to make it unit um
@@ -56,11 +56,11 @@ for ii=1:length(L)
         else
             indicies = [set_ii(1) set_ii(end)];
         end
-%         if length(indicies) > 3
-%             selectedIdx{ii} = indicies(3:end)';
-%         else
+        if length(indicies) > 3
+            selectedIdx{ii} = indicies(3:end)';
+        else
             selectedIdx{ii} = indicies(2:end)';
-%         end
+        end
     else
         %%
         % flip indicies so that lower indicies are close to branching

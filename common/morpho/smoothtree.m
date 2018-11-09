@@ -17,6 +17,14 @@ function [intree] = smoothtree(intree,opt)
 % Copyright: HHMI 2016
 [L,list] = getBranches(intree.dA);
 
+
+if isfield(opt,'sizethreshold')
+    filtwidth = opt.sizethreshold;
+else
+    myhist = histc(list,unique(list));
+    filtwidth = max(3,round(median(myhist)/10));
+end
+
 XYZ = [intree.X intree.Y intree.Z];
 R = intree.R;
 D = intree.D;
@@ -29,12 +37,12 @@ for ii=1:length(L)
     xyz = XYZ(set_ii,:);
     for jj=3 % only on z
         X = xyz(:,jj);
-        XYZ(set_ii,jj) = medfilt1(medfilt1(X,opt.sizethreshold),opt.sizethreshold);
+        XYZ(set_ii,jj) = medfilt1(medfilt1(X,filtwidth),filtwidth);
     end
     intree.Z(set_ii) = XYZ(set_ii,jj);
     % smooth radius
-    if 0
-        R(set_ii) = medfilt1(medfilt1(R(set_ii),opt.sizethreshold),opt.sizethreshold);
+    if 1
+        R(set_ii) = medfilt1(medfilt1(R(set_ii),3),3);
     end
 end
 end
