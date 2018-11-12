@@ -104,34 +104,33 @@ load ./visualization_functions/residual_iterated_results.mat Sest Sres Aest Ares
 
 %%
 % load ./visualization_functions/residual_results.mat Sest Sres Aest Ares Cres residual_onx residual_ony residual_onz stats
-[S_mse,A_mse,C_mse,C_msex,C_msey,C_msez,CZ_mse,CZ_msex,CZ_msey,CZ_msez] = deal(nan(1,numtile));
+%[S_mse,A_mse] = deal(nan(1,numtile));
+[C_num, C_mse,C_msex,C_msey,C_msez] = deal(nan(1,numtile));
+[CX_num, CX_mse,CX_msex,CX_msey,CX_msez] = deal(nan(1,numtile));
+[CY_num, CY_mse,CY_msex,CY_msey,CY_msez] = deal(nan(1,numtile));
+[CZ_num, CZ_mse,CZ_msex,CZ_msey,CZ_msez] = deal(nan(1,numtile));
+
 mse_desc = nan(1,numtile);
 for it = 1:numtile
-    inputval = Cres{it};
     %inputval = inputval - mean(inputval);
-    if ~isnan(Aest{it}); S_mse(it) = ctrl.meanSqrt(Sres{it}); end
-    if ~isnan(Aest{it}); A_mse(it) = ctrl.meanSqrt(Ares{it}); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); C_mse(it) = ctrl.meanSqrt(inputval); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); C_msex(it) = ctrl.meanSqrt(inputval(:,1)); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); C_msey(it) = ctrl.meanSqrt(inputval(:,2)); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); C_msez(it) = ctrl.meanSqrt(inputval(:,3)); end
-    
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); CZ_mse(it) = ctrl.meanSqrt(residual_onz{it}); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); CZ_msex(it) = ctrl.meanSqrt(residual_onz{it}(:,1)); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); CZ_msey(it) = ctrl.meanSqrt(residual_onz{it}(:,2)); end
-    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}); CZ_msez(it) = ctrl.meanSqrt(residual_onz{it}(:,3)); end
-    
-    function tileStat(obj,X)
-        numrows = size(X,1);
-        msq = obj.meanSqrt(X);
-        
-    
-    
-    end
-    
-    end
-    mse_stats(it,:) = [size(inputval)]
+    %if ~isnan(Aest{it}); S_mse(it) = ctrl.meanSqrt(Sres{it}); end
+    %if ~isnan(Aest{it}); A_mse(it) = ctrl.meanSqrt(Ares{it}); end
+
+    inputval = Cres{it};
+    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}) & ~isempty(inputval); [C_num(it), C_mse(it), C_msex(it), C_msey(it), C_msez(it)] = ctrl.tileStat(inputval); end
+    inputval = residual_onx{it};
+    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}) & ~isempty(inputval); [CX_num(it), CX_mse(it), CX_msex(it), CX_msey(it), CX_msez(it)] = ctrl.tileStat(inputval); end
+    inputval = residual_ony{it};
+    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}) & ~isempty(inputval); [CY_num(it), CY_mse(it), CY_msex(it), CY_msey(it), CY_msez(it)] = ctrl.tileStat(inputval); end
+    inputval = residual_onz{it};
+    if ~isnan(Aest{it}) & ~isempty(residual_onz{it}) & ~isempty(inputval); [CZ_num(it), CZ_mse(it), CZ_msex(it), CZ_msey(it), CZ_msez(it)] = ctrl.tileStat(inputval); end
 end
+
+% save mse_results_iterated C_num C_mse C_msex C_msey C_msez CX_num CX_mse CX_msex CX_msey CX_msez CY_num CY_mse CY_msex CY_msey CY_msez CZ_num CZ_mse CZ_msex CZ_msey CZ_msez scopeloc finterior -v7.3
+
+%%
+figure
+h_ctrl = histogram(C_mse,'BinWidth',.025);
 
 %%
 % get mask/inds for interior. This is to prevent outliers due to gelatin

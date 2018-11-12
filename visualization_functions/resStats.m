@@ -61,7 +61,7 @@ classdef resStats < handle
             leg.FontSize = 32;
             xlim([0 5])
             
-            title('Residual out of 11657 tiles', 'FontSize', 30)
+            title(sprintf('Residual out of %d tiles',sum(finterior>0)), 'FontSize', 30)
             xlabel('Residual magnitude in \mum', 'FontSize', 30)
             ax.YAxis.FontSize = 24;
             ax.XAxis.FontSize = 24;

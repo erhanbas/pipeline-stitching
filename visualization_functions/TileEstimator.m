@@ -78,6 +78,14 @@ classdef TileEstimator
             mX = median(sqrt(sum(X.^2,2)),'omitnan');
         end
         
+        function varargout = tileStat(obj,X)
+            numrows = size(X,1);
+            msq = obj.meanSqrt(X);
+            meds = median(abs(X),1,'omitnan');
+            varargout = num2cell([numrows msq meds]);
+        end
+        
+        
         function [residual,residual_onx, residual_ony, residual_onz, stats] = estimateResidual4ctrl(obj,idx_center,idx_target)
             
             %% estimates residual error for matched descriptors
