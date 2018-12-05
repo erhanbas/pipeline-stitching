@@ -31,6 +31,7 @@ unreliable = ~reliable(:,1:2) | outlier > 1;
 
 %%
 if 0
+    %% outlier rejection per tile
     inliers = find(~any(unreliable,2));
     % for every tiles estimate an affine
     anchors = scopeloc.gridix(inliers,1:3);
