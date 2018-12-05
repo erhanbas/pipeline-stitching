@@ -45,6 +45,7 @@ xlocs = 1:dims(1);
 ylocs = 1:dims(2);
 [xy2,xy1] = ndgrid(ylocs(:),xlocs(:));
 xy = [xy1(:),xy2(:)];
+
 %%
 scopeparams = [];
 Ntiles = size(neigs,1);
@@ -116,6 +117,7 @@ parfor itile = 1:Ntiles
                         allY = [allY;paireddescriptor{ileft}.onx.X];
                         stgdisp(:,end+1) = 1000*(scopeloc.loc(ileft,:)-scopeloc.loc(neigs(itile,1),:));
                         sdisp = [sdisp,1000*stgdisp(:,end)*ones(1,siz(end))];
+                        validthis(itile) = 1;
                     end
                 elseif find(paireddescriptor{theseinds(ii)}.neigs==itile)==3 % above
                     iabove = neigs4(itile,3);
@@ -124,6 +126,7 @@ parfor itile = 1:Ntiles
                     allY = [allY;paireddescriptor{iabove}.ony.X];
                     stgdisp(:,end+1) = 1000*(scopeloc.loc(iabove,:)-scopeloc.loc(neigs(itile,1),:));
                     sdisp = [sdisp,1000*stgdisp(:,end)*ones(1,siz(end))];
+                    validthis(itile) = 1;
                 else
                 end
             end
@@ -149,31 +152,10 @@ parfor itile = 1:Ntiles
         suballX = allX+1;
         suballY = allY+1;
         
-        if 1
-            [locs,xshift2D,yshift2D] = util.fcshift(curvemodel(:,:,itile),order,xy,dims,suballX);
-            allXFC = locs-1;
-            [locs,xshift2D,yshift2D] = util.fcshift(curvemodel(:,:,itile),order,xy,dims,suballY);
-            allYFC = locs-1;
-        else
-            cent = squeeze(mean(curvemodel(1:2,1,itile),3));
-            scale = (squeeze(mean(curvemodel(1:2,2,itile),3)));
-            shift = squeeze(mean(curvemodel(1:2,3,itile),3));
-            beta = scale./shift.^order;
-            [xshift2D,yshift2D] = shiftxy(xy,cent,beta,order,dims);
-            % descriptors are 0 index based
-            idxx = sub2ind(dims([2 1]),allX(:,2),allX(:,1));
-            xshift = xshift2D(idxx);
-            idxy = sub2ind(dims([2 1]),allX(:,2),allX(:,1));
-            yshift = yshift2D(idxy);
-            allXFC(:,1) = allX(:,1) + xshift;
-            allXFC(:,2) = allX(:,2) + yshift;
-            idxx = sub2ind(dims([2 1]),allY(:,2),allY(:,1));
-            xshift = xshift2D(idxx);
-            idxy = sub2ind(dims([2 1]),allY(:,2),allY(:,1));
-            yshift = yshift2D(idxy);
-            allYFC(:,1) = allY(:,1) + xshift;
-            allYFC(:,2) = allY(:,2) + yshift;
-        end
+        [locs,xshift2D,yshift2D] = util.fcshift(curvemodel(:,:,itile),order,xy,dims,suballX);
+        allXFC = locs-1;
+        [locs,xshift2D,yshift2D] = util.fcshift(curvemodel(:,:,itile),order,xy,dims,suballY);
+        allYFC = locs-1;
         
         Dall = (allY-allX)';
         DallFC = (allYFC-allXFC)';
