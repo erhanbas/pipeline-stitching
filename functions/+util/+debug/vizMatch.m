@@ -35,3 +35,13 @@ imshowpair(imadjust(Ic_m),RA,imadjust(It_m),RB,'falsecolor','Scaling','joint','C
 hold on
 myplot3(descent-1,{'bo','MarkerSize',6,'LineWidth',1})
 myplot3(descadj-1,{'yo','MarkerSize',6,'LineWidth',1})
+%%
+myplot3(X-1,{'bo','MarkerSize',12,'LineWidth',1})
+myplot3(Y-1,{'yo','MarkerSize',12,'LineWidth',1})
+% delete(findobj('Color','r'))
+hold on
+Y_2 = Y_;
+Y_2(:,iadj) = Y_2(:,iadj) + pixshift(iadj);
+XX = [X_(:,1),Y_2(:,1),nan*X_(:,1)]'-1;
+YY = [X_(:,2),Y_2(:,2),nan*X_(:,2)]'-1;
+plot(XX,YY,'r')
