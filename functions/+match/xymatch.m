@@ -1,4 +1,4 @@
-function [paireddescriptor,R,curvemodel] = xymatch(descriptors,neigs,scopeloc,params)
+function [paireddescriptor,medianResidualperTile,curvemodel] = xymatch(descriptors,neigs,scopeloc,params,model)
 %ESTIMATESCOPEPARAMETERS Summary of this function goes here
 %
 % [OUTPUTARGS] = ESTIMATESCOPEPARAMETERS(INPUTARGS) Explain usage here
@@ -18,6 +18,9 @@ function [paireddescriptor,R,curvemodel] = xymatch(descriptors,neigs,scopeloc,pa
 %%
 addpath(genpath('./thirdparty'))
 Ntiles = size(neigs,1);
+if nargin<5
+    model = @(p,y) p(3) - p(2).*((y-p(1)).^2); % FC model
+end
 
 debug = 0;
 res = 0;
@@ -32,7 +35,6 @@ imsize_um = params.imsize_um;
 % expensionshift = [0 0 20]; % HEURISTICS:: tissue expends, so overlap is bigger between tiles
 
 %%
-model = @(p,y) p(3) - p(2).*((y-p(1)).^2); % FC model
 optimopts = statset('nlinfit');
 optimopts.RobustWgtFun = 'bisquare';
 % opt.method='nonrigid_lowrank';
@@ -106,8 +108,8 @@ end
 % checkthese = [1 4 5 7]; % 0 - right - bottom - below
 % indicies are 1 based,e.g. x = 1:dims(1), not 0:dims(1)-1
 % xyz_umperpix = zeros(size(neigs,1),3);
-curvemodel = zeros(3,3,size(neigs,1));
-R = zeros(3,3,size(neigs,1));
+curvemodel = nan(3,3,size(neigs,1));
+medianResidualperTile = zeros(3,3,size(neigs,1));
 paireddescriptor = cell(size(neigs,1),1);
 % initialize
 for ix = 1:size(neigs,1)
@@ -144,7 +146,7 @@ parfor ineig = 1:Ntiles%5163%[5162 5163 5164]%Ntiles%find(neigs(:,1)==5463)%1:si
     if size(descent,1)<3;continue;end
     
     descent = util.correctTiles(descent,dims); % flip dimensions
-    mout = zeros(3,3);
+    mout = nan(3,3);
     paireddescriptor_ = paireddesctemp;
     R_ = zeros(3); % median residual
     
@@ -183,16 +185,6 @@ parfor ineig = 1:Ntiles%5163%[5162 5163 5164]%Ntiles%find(neigs(:,1)==5463)%1:si
         %%
         if viz & 0;
             util.debug.vizMatch(scopeloc,neigs,descriptors,ineig,imsize_um,iadj);
-            %%
-            myplot3(X-1,{'bo','MarkerSize',12,'LineWidth',1})
-            myplot3(Y-1,{'yo','MarkerSize',12,'LineWidth',1})
-            % delete(findobj('Color','r'))
-            hold on
-            Y_2 = Y_;
-            Y_2(:,iadj) = Y_2(:,iadj) - pixshift(iadj);
-            XX = [X_(:,1),Y_2(:,1),nan*X_(:,1)]'-1;
-            YY = [X_(:,2),Y_2(:,2),nan*X_(:,2)]'-1;
-            plot(XX,YY,'r')
         end
         %%
         % get field curvature model
@@ -219,7 +211,7 @@ parfor ineig = 1:Ntiles%5163%[5162 5163 5164]%Ntiles%find(neigs(:,1)==5463)%1:si
         %R(:,iadj,ineig) = round(median(X_-Y_));
         R_(:,iadj) = round(median(X_-Y_));
     end
-    R(:,:,ineig) = R_;
+    medianResidualperTile(:,:,ineig) = R_;
     curvemodel(:,:,ineig) = mout;
     
     paireddescriptor{ineig}.onx.valid = paireddescriptor_{1}.valid;
