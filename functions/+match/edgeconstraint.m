@@ -1,5 +1,7 @@
 function [c,ceq] = edgeconstraint(x,model,pinit,dimcent)
 
+% init_vals = [feval(model,pinit,1) feval(model,pinit,dimcent) feval(model,pinit,2*dimcent)];
+% iter_vals = [feval(model,x,1) feval(model,x,dimcent) feval(model,x,2*dimcent)]; 
 init_vals = [feval(model,pinit,1) feval(model,pinit,2*dimcent)];
 iter_vals = [feval(model,x,1) feval(model,x,2*dimcent)]; 
 

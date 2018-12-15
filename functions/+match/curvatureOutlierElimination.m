@@ -26,7 +26,7 @@ for itile = 1:Ntile
     outlier(itile,1) = mean(abs(xbase-xest));
     outlier(itile,2) = mean(abs(ybase-yest));
 end
-unreliable = ~reliable(:,1:2) | outlier > 1;
+unreliable = ~reliable(:,1:2) | outlier > 1 | isnan(outlier);
 
 
 %%

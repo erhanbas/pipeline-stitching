@@ -22,7 +22,7 @@ function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 % inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
 runfull = false;
 if nargin==1
-    brain = '2018-08-01';
+    brain = '2018-08-15';
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
     pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain)
 elseif nargin<1
@@ -95,9 +95,6 @@ end
 % rather then channel logs
 if 0
     curationH5(classifierinput,classifieroutput)
-end
-
-if 0
     % checkmissingProb(classifierinput,classifieroutput)
     checkmissingDesc(descinput,descoutput)
     checkmissingMatch(matchinput,matchoutput)
@@ -137,7 +134,7 @@ end
 % iii) creates a 3D affine model by jointly solving a linear system of
 % equations
 
-if runfull | 1
+if runfull
     
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
@@ -145,44 +142,35 @@ if runfull | 1
     scopeacqparams = readScopeFile(fileparts(scopeloc.filepath{1}));
     % params.sample = brain;
     params.scopeacqparams = scopeacqparams;
+    params.imsize_um = [scopeacqparams.x_size_um scopeacqparams.y_size_um scopeacqparams.z_size_um];
+    params.overlap_um = [scopeacqparams.x_overlap_um scopeacqparams.y_overlap_um scopeacqparams.z_overlap_um];
+    params.imagesize = [1024 1536 251];
+
     params.viz = 0;
     params.debug = 0;
     params.Ndivs = 4;
     params.Nlayer = 4;
     params.htop = 5;
     params.expensionratio = 1;
-    params.imagesize = [1024 1536 251];
-    params.imsize_um = [scopeacqparams.x_size_um scopeacqparams.y_size_um scopeacqparams.z_size_um];
-    params.overlap_um = [scopeacqparams.x_overlap_um scopeacqparams.y_overlap_um scopeacqparams.z_overlap_um];
     params.order = 1;
     params.applyFC = 1;
     params.beadparams = [];%PLACEHOLDER FOR BEADS, very unlikely to have it...
     params.singleTile = 1;
 
-    if 1
-        if 0
-            [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
-                tileProcessor_debug(scopeloc,descriptorfolder,desc_ch,params);
-        else
-            [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
-                tileProcessor(scopeloc,descriptorfolder,desc_ch,params);
-            save(descriptorfile,'descriptors','-v7.3')
-            save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
-                'scopeparams', 'curvemodel','params','-v7.3')
-        end
+    if 0
+        [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
+            tileProcessor_debug(scopeloc,descriptorfolder,desc_ch,params);
     else
-        descriptors = getDescriptorsPerFolder(descriptorfolder,scopeloc,desc_ch);
-        [paireddescriptor, scopeparams, R, curvemodel,scopeparams_, paireddescriptor_,curvemodel_] = ...
-            estimateFCpertile(descriptors,neighbors,scopeloc,params); %#ok<ASGLU>
+        [descriptors,paireddescriptor,curvemodel,scopeparams] = ...
+            tileProcessor(scopeloc,descriptorfolder,desc_ch,params);
         save(descriptorfile,'descriptors','-v7.3')
-        save(fullfile(matfolder,'scopeparams_pertile_singletile'),'paireddescriptor', ...
-            'scopeparams', 'R', 'curvemodel','scopeparams_', 'paireddescriptor_', ...
-            'curvemodel_','params')
+        save(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
+            'scopeparams', 'curvemodel','params','-v7.3')
     end
 end
 
 %%
-if runfull
+if 0&runfull
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
@@ -195,7 +183,7 @@ if runfull
 end
 
 %%
-if 1
+if runfull
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'regpts'),'regpts')
     load(fullfile(matfolder,'scopeparams_pertile'),'paireddescriptor', ...
@@ -207,30 +195,30 @@ if 1
         save(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
     end
 end
-%
+%%
 % 4
 load(scopefile,'scopeloc','neighbors','imsize_um','experimentfolder','inputfolder')
 load(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
-%
 vecfield = vecfield3D;
 
+%%
 % checkthese = [1 4 5 7]; % 0 - right - bottom - below
 % [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
 params.big = 1;
 params.ymldims = [params.imagesize 2];%[1024 1536 251 2]
-sub = 0;
+sub = 1;
 params.root = vecfield.root;
 
 if sub
     targetidx = getTargetIDx(scopeloc,neighbors);
+    copytiles2target('./test_copt',scopeloc,targetidx(1))
     params.outfile = fullfile(experimentfolder,sprintf('%s_sub.control.yml',date));
 else
     targetidx = 1:size(scopeloc.gridix,1);
     params.outfile = fullfile(experimentfolder,sprintf('%s.control.yml',date));
 end
-
-writeYML(params, targetidx(:)', vecfield)
-unix(sprintf('cp %s %s',params.outfile,fullfile(experimentfolder,'tilebase.cache.yml')))
+writeYML(params, targetidx(:)', vecfield);
+unix(sprintf('cp %s %s',params.outfile,fullfile(experimentfolder,'tilebase.cache.yml')));
 %
 if ~sub
     params.big=0

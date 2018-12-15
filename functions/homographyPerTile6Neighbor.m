@@ -52,15 +52,15 @@ reliable = nan(Ntiles,1);
 for itile = 1:Ntiles
     if isempty(scopeparamsUpdated(itile).affineglFC) 
         reliable(itile) = 0;
-        disp(sprintf('WARNING: Bad affine estimate @tile: %d [%4.2f %4.2f %4.2f]',itile,(1000*scopeloc.loc(itile,:)))) %#ok<*DSPS>
-    elseif norm(scopeparamsUpdated(ineig).affineglFC-aff)/norm(aff)*100>1
+        disp(sprintf('WARNING: Empty affine estimate @tile: %d [%4.2f %4.2f %4.2f]',itile,(1000*scopeloc.loc(itile,:)))) %#ok<*DSPS>
+    elseif norm(scopeparamsUpdated(itile).affineglFC-aff)/norm(aff)*100>1
         disp(sprintf('WARNING: Bad affine estimate @tile: %d [%4.2f %4.2f %4.2f]',itile,(1000*scopeloc.loc(itile,:))))
         reliable(itile) = 0;
     else
         reliable(itile) = 1;
     end
 end
-if sum(~reliable);return;end
+if ~sum(~reliable);return;end
 %%
 inliers = find(reliable(:));
 % for every tiles estimate an affine
