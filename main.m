@@ -24,7 +24,7 @@ function [outputArgs] = main(inputfolder,pipelineoutputfolder,experimentfolder)
 
 %% MAKE SURE PATHS etc are correct
 % inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
-runfull = false;
+runfull = true;
 if nargin==1
     %brain = '2018-08-01';
     brain = inputfolder;
@@ -36,9 +36,10 @@ if nargin==1
     else
         experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s-%s',brain,getenv('USER'));
     end
-    
 elseif nargin<1
     error('At least pass brain id')
+else
+    [~,brain] = fileparts(inputfolder);
 end
 
 addpath(genpath('./common'))
@@ -91,7 +92,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull & 0
+if runfull
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format

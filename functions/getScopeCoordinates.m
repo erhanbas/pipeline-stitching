@@ -23,12 +23,13 @@ args.keep = {''}
 args.pattern = '\d'
 opt.seqtemp = fullfile(inputfolder,'scopeacquisitionlist.txt');
 opt.inputfolder = inputfolder;
-% if exist(opt.seqtemp, 'file') == 2
-%     % load file directly
-% else
-args.fid = fopen(opt.seqtemp,'w');
-recdir(opt.inputfolder,args)
-% end
+if exist(opt.seqtemp, 'file') == 2
+    % load file directly
+else
+    args.fid = fopen(opt.seqtemp,'w');
+    recdir(opt.inputfolder,args) % fclose is internal
+    unix(sprintf('chmod g+rwx %s',opt.seqtemp));
+end
 
 fid=fopen(opt.seqtemp,'r');
 inputfiles = textscan(fid,'%s');
@@ -38,7 +39,7 @@ fclose(fid);
 [gridix,loc] = deal(cell(1,size(inputfiles,1)));
 if newdash
     parfor_progress(size(inputfiles,1));
-    for ifile = 1:size(inputfiles,1)
+    parfor ifile = 1:size(inputfiles,1)
         parfor_progress;
         scvals = util.scopeparser(inputfiles{ifile});
         gridix{ifile} = [scvals.x scvals.y scvals.z scvals.cut_count];
