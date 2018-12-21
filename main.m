@@ -1,4 +1,4 @@
-function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
+function [outputArgs] = main(inputfolder,pipelineoutputfolder,experimentfolder)
 %STICHING pipeline. Reads scope generated json file and returns a yml
 %configuration file that goes into renderer. Requires calling cluster jobs
 %to create subresults, i.e. descriptors. These functions can also run in
@@ -26,14 +26,21 @@ function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 %% MAKE SURE PATHS etc are correct
 runfull = false;
 if nargin==1
-    brain = '2018-08-15';
+    %brain = '2018-08-01';
+    brain = inputfolder;
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
-    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain)
+    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain);
+    arch = lower(computer('arch'));
+    if arch(1:2) == 'pc'
+        error('windows machine, set the input using input arguments')
+    else
+        experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s-%s',brain,getenv('USER'));
+    end
+    
 elseif nargin<1
     error('At least pass brain id')
 end
 
-%%
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
 % classifierinput = inputfolder;
@@ -47,8 +54,6 @@ if piperun
         descoutput ='/nrs/mouselight/cluster/classifierOutputs/2017-09-25/classifier_output'
         matchoutput = descoutput;
     elseif brain=='2018-08-15'
-%         classifieroutput = fullfile(pipelineoutputfolder,'stage_2_classifier_output')
-%         descinput = classifieroutput;
         descoutput = fullfile(pipelineoutputfolder,'stage_2_descriptor_output')
         matchinput = descoutput;
         matchoutput = fullfile(pipelineoutputfolder,'stage_3_point_match_output')
@@ -61,13 +66,16 @@ if piperun
     end
 end
 
-experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s',brain);
-matfolder = fullfile(experimentfolder,'matfiles/');
-mkdir(matfolder)
-unix(sprintf('umask g+rxw %s',matfolder));
-unix(sprintf('chmod g+rxw %s',matfolder));
-scopefile = fullfile(matfolder,'scopeloc.mat');
 
+matfolder = fullfile(experimentfolder,'matfiles/');
+
+mkdir(experimentfolder)
+unix(sprintf('chmod g+rxw %s',experimentfolder));
+unix(sprintf('umask g+rxw %s',experimentfolder));
+mkdir(matfolder)
+
+
+scopefile = fullfile(matfolder,'scopeloc.mat');
 if piperun
     descriptorfolder = descoutput;
     matchfolder = matchoutput;
@@ -83,7 +91,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull
+if runfull & 0
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -175,10 +183,11 @@ if runfull
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
     load(fullfile(matfolder,'regpts'),'regpts')
+    mkdir('./videos')
     videofile = sprintf('./videos/%s-1stiter-ch1-%s',brain,date)
-    % descriptorMatchQuality(regpts,scopeparams,scopeloc,videofile)
+    descriptorMatchQuality(regpts,scopeparams{end},scopeloc,videofile)
     %     createThumb(regpts,scopeparams,scopeloc,videofile)
-    descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
+    % descriptorMatchQualityHeatMap(regpts,scopeparams{end},scopeloc,videofile)
 %     descriptorMatchQualityHeatMap_forPaper(regpts,scopeparams{end},scopeloc,videofile)
 end
 
@@ -197,7 +206,7 @@ if runfull
 end
 %%
 % 4
-load(scopefile,'scopeloc','neighbors','imsize_um','experimentfolder','inputfolder')
+load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
 load(fullfile(matfolder,'vecfield3D'),'vecfield3D','params')
 vecfield = vecfield3D;
 
@@ -206,7 +215,7 @@ vecfield = vecfield3D;
 % [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
 params.big = 1;
 params.ymldims = [params.imagesize 2];%[1024 1536 251 2]
-sub = 1;
+sub = 0;
 params.root = vecfield.root;
 
 if sub
