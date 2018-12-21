@@ -16,10 +16,14 @@ function [outputArgs] = main(brain,inputfolder,pipelineoutputfolder)
 %
 % See also: List related files here
 
-% $Author: base $	$Date: 2016/09/21 11:52:40 $	$Revision: 0.1 $
+% NOTES:
+% directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
+% directions = 'Z';
+
+% $Author: base $	$Date: 2016/09/21 11:52:40 $
 % Copyright: HHMI 2016
+
 %% MAKE SURE PATHS etc are correct
-% inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
 runfull = false;
 if nargin==1
     brain = '2018-08-15';
@@ -30,12 +34,8 @@ elseif nargin<1
 end
 
 %%
-directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
-directions = 'Z';
-
 addpath(genpath('./common'))
 addpath(genpath('./functions'))
-tag='';
 % classifierinput = inputfolder;
 % raw input to descriptor generotion
 
@@ -170,7 +170,7 @@ if runfull
 end
 
 %%
-if 0&runfull
+if runfull
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')
