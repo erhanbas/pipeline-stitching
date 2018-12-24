@@ -3,21 +3,6 @@ function [outputArgs] = main(inputfolder,pipelineoutputfolder,experimentfolder)
 %configuration file that goes into renderer. Requires calling cluster jobs
 %to create subresults, i.e. descriptors. These functions can also run in
 %local machines with proper settings.
-%
-% [OUTPUTARGS] = STICHING(jsonfile)
-%
-% Inputs:
-%
-% Outputs:
-%
-% Examples:
-%
-% Provide sample usage code here
-%
-% See also: List related files here
-
-% $Author: base $	$Date: 2016/09/21 11:52:40 $	$Revision: 0.1 $
-% Copyright: HHMI 2016
 %% NOTES
 % directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
 % directions = 'Z';
