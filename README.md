@@ -16,17 +16,19 @@ main(inputfolder,[pipelineoutputfolder,experimentfolder])
     experimentfolder: output folder
 
 ## sample usage
+```
     main('2018-06-14')
-    This will assume pipeline points to: 
-        pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain);
-    and create tilebase.cache.yml file in the '/nrs/mouselight/cluster/classifierOutputs/'2018-06-14'
-    OR
+```
+This will assume pipeline points to `sprintf('/nrs/mouselight/pipeline_output/%s',brain)` and create tilebase.cache.yml file in the `/nrs/mouselight/cluster/classifierOutputs/'2018-06-14`
+
+ OR
+```
     brain = '2018-08-01';
     inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
     pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain);
     experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s-%s',brain,getenv('USER'));
     main(inputfolder, pipelineoutputfolder, experimentfolder)
-    
+```    
 ## sample render usage
     copy a sample parameter file next to yml file, e.g. 
     copy /nrs/mouselight/cluster/classifierOutputs/2018-07-02/set_parameters_raw.jl /nrs/mouselight/cluster/classifierOutputs/'2018-06-14/parameters_raw.jl
