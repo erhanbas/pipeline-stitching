@@ -8,18 +8,24 @@ clone https://github.com/erhanbas/pipeline-stitching.git
 ```
 2. run main.m in matlab
 ```
-main(brain,[inputfolder,pipelineoutputfolder])
+main(inputfolder,[pipelineoutputfolder,experimentfolder])
 ```
 ## inputs/outputs
-    brain : sample name, e.g. '2018-06-14';
-    inputfolder [OPTIONAL]: acqusition folder, e.g. sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
-    pipelineoutputfolder [OPTIONAL]: outputfolder e.g. sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+    inputfolder/brain: acqusition folder for nargin=3, brain id for nargin=1
+    pipelineoutputfolder: pipeline folder e.g. sprintf('/nrs/mouselight/cluster/sandbox2/%s',brain)
+    experimentfolder: output folder
 
 ## sample usage
     main('2018-06-14')
-    This will create tilebase.cache.yml file in the '/nrs/mouselight/cluster/classifierOutputs/'2018-06-14' folder 
-    Then run the render
-   
+    This will assume pipeline points to: 
+        pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain);
+    and create tilebase.cache.yml file in the '/nrs/mouselight/cluster/classifierOutputs/'2018-06-14'
+    OR
+    brain = '2018-08-01';
+    inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/acquisition/%s',brain);
+    pipelineoutputfolder = sprintf('/nrs/mouselight/pipeline_output/%s',brain);
+    experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s-%s',brain,getenv('USER'));
+    main(inputfolder, pipelineoutputfolder, experimentfolder)
     
 ## sample render usage
     copy a sample parameter file next to yml file, e.g. 
