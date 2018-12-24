@@ -124,7 +124,8 @@ if runfull
     end
 end
 
-if 0 % iterate on missing tiles (ANOTHER BULLSHIT)
+%%
+if 1 % iterate on missing tiles (ANOTHER BULLSHIT)
     
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
