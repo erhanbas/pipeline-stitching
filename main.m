@@ -219,8 +219,9 @@ sub = 0;
 params.root = vecfield.root;
 
 if sub
+    targetfold='/groups/mousebrainmicro/home/base/CODE/wrapJRC/stitching/20180801_tileid-13024/RAW_microscope_data/2018-08-01_raw-5x5x5-tileid-13024'
     targetidx = getTargetIDx(scopeloc,neighbors);
-    copytiles2target('./test_copt',scopeloc,targetidx(1))
+    copytiles2target(targetfold,scopeloc,targetidx)
     params.outfile = fullfile(experimentfolder,sprintf('%s_sub.control.yml',date));
 else
     targetidx = 1:size(scopeloc.gridix,1);

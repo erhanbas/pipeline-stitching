@@ -2,13 +2,13 @@ function targetidx = getTargetIDx(scopeloc,neighbors)
 if 1
     %%
     if 1
-        numt=1;
+        numt=2;
         % 2018-08-01
         st=[238,44,1475]-1;%[192,124,1049];
-        st=[243,43,1479]-1; % 11720
+        st=[243,43,1479]-numt; % 11720
         st=[224,44,1482]-numt; % 13024
-        % 2018-08-15
-        st=[229,26,1589]-numt;
+%         % 2018-08-15
+%         st=[229,26,1589]-numt;
 
         ed=st+2*numt;
     elseif 0

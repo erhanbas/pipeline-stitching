@@ -8,7 +8,9 @@ for ix = 1:ntiles
     it = inds(ix);
     [folderpath,tilepath] = fileparts(scopeloc.filepath{it});
     mkdir(fullfile(targetfolder,scopeloc.relativepaths{it}))
-    unix(sprintf('cp -a %s/* %s',folderpath,fullfile(targetfolder,scopeloc.relativepaths{it})));
+    if 1 | ~exist(fullfile(targetfolder,scopeloc.relativepaths{it}),'dir')
+        unix(sprintf('cp -a %s/* %s',folderpath,fullfile(targetfolder,scopeloc.relativepaths{it})));
+    end
     
     % targetstructure
     scopeacqparams = readScopeFile(fileparts(scopeloc.filepath{it}));
