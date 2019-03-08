@@ -3,28 +3,13 @@ function [outputArgs] = main(inputfolder,pipelineoutputfolder,experimentfolder)
 %configuration file that goes into renderer. Requires calling cluster jobs
 %to create subresults, i.e. descriptors. These functions can also run in
 %local machines with proper settings.
-%
-% [OUTPUTARGS] = STICHING(jsonfile)
-%
-% Inputs:
-%
-% Outputs:
-%
-% Examples:
-%
-% Provide sample usage code here
-%
-% See also: List related files here
-
-% NOTES:
+%% NOTES
 % directionMap = containers.Map({'-X','-Y','X','Y','-Z','Z'},[ 2, 3, 4, 5, 6, 7]);
 % directions = 'Z';
 
-% $Author: base $	$Date: 2016/09/21 11:52:40 $
-% Copyright: HHMI 2016
-
 %% MAKE SURE PATHS etc are correct
-runfull = false;
+% inputfolder = sprintf('/groups/mousebrainmicro/mousebrainmicro/data/%s/Tiling',brain);
+runfull = true;
 if nargin==1
     %brain = '2018-08-01';
     brain = inputfolder;
@@ -36,9 +21,10 @@ if nargin==1
     else
         experimentfolder = sprintf('/nrs/mouselight/cluster/classifierOutputs/%s-%s',brain,getenv('USER'));
     end
-    
 elseif nargin<1
     error('At least pass brain id')
+else
+    [~,brain] = fileparts(inputfolder);
 end
 
 addpath(genpath('./common'))
@@ -91,7 +77,7 @@ matchedfeatfile = fullfile(matfolder,sprintf('feats_ch%s.mat',desc_ch{:})); % ac
 
 %% 0: INTIALIZE
 % read scope files and populate stage coordinates
-if runfull & 0
+if runfull
     newdash = 1; % set this to 1 for datasets acquired after 160404
     [scopeloc] = getScopeCoordinates(inputfolder,newdash);% parse from acqusition files
     [neighbors] = buildNeighbor(scopeloc.gridix(:,1:3)); %[id -x -y +x +y -z +z] format
@@ -123,7 +109,8 @@ if runfull
     end
 end
 
-if 0 % iterate on missing tiles (ANOTHER BULLSHIT)
+%%
+if 1 % iterate on missing tiles (ANOTHER BULLSHIT)
     
     addpath(genpath('/groups/mousebrainmicro/home/base/CODE/MATLAB/pipeline/zmatch_pipe'),'-end')
     %pointmatch_task(brain,runlocal)
@@ -178,7 +165,7 @@ if runfull
 end
 
 %%
-if runfull
+if 0&runfull
     %%
     load(scopefile,'scopeloc','neighbors','experimentfolder','inputfolder')
     load(fullfile(matfolder,'scopeparams_pertile'),'scopeparams')

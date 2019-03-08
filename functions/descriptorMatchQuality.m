@@ -67,6 +67,10 @@ for t = latticeZRange(1:end-1)'
         layer{cnt} = regpts{id_ix}.X;
         layerp1{cnt} = regpts{id_ix}.Y;
         % apply tforms
+        if any(isnan(neigs([1 4])))
+            continue
+        end
+        
         Layer_t = [regpts{id_ix}.X ones(size(regpts{id_ix}.X,1),1)]*afftile(:,:,neigs(1))';
         Layer_tp1 = [regpts{id_ix}.Y ones(size(regpts{id_ix}.Y,1),1)]*afftile(:,:,neigs(4))';
         Npts = Npts+size(Layer_t,1);
